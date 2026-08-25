@@ -1,0 +1,8 @@
+; Cardano's and Tron's arrangement: Cosmos_rpc_flow.Make applied to a Unix file
+; descriptor and nothing else, so the Unix path and the unikernel path are the
+; same implementation with a different flow underneath.
+
+(library
+ (name cosmos_rpc_unix)
+ (public_name cosmos-rpc-unix)
+ (libraries cosmos-rpc cosmos-rpc-flow lwt mirage-flow-unix uri))

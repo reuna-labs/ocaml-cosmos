@@ -1,0 +1,108 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # The oracles first: if the fixtures have drifted, everything downstream is
+  # being checked against the wrong answer. Skipped while conformance/ is
+  # empty -- see conformance/README.md for what goes in it.
+  sdk-conformance:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('conformance/fixtures/**') != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Regenerate the CosmJS fixtures
+        run: |
+          npm ci --prefix conformance/cosmjs
+          npm --prefix conformance/cosmjs run generate
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Regenerate the simd fixtures
+        run: conformance/simd/generate.sh
+
+      # A generator that no longer reproduces the committed bytes means either
+      # the SDK changed or we did. Either way it is not something to discover
+      # at release time.
+      - name: The fixtures must not have moved
+        run: git diff --exit-code conformance/fixtures/
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ocaml-compiler: ["4.14.2", "5.2.1"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+
+      # No GMP step here, deliberately. ocaml-tron's workflow builds a
+      # hash-verified GMP prefix because zarith is unavoidable in its closure;
+      # this one has no zarith at all, and test/no_io_guard.sh below is what
+      # keeps that true.
+
+      - name: Pin the sibling packages
+        run: |
+          opam pin add -yn web3-codec-bech32.dev \
+            git+https://github.com/reuna-labs/ocaml-web3-codec.git
+          opam pin add -yn web3-codec-protobuf.dev \
+            git+https://github.com/reuna-labs/ocaml-web3-codec.git
+
+      - run: opam install --deps-only --with-test .
+
+      - run: opam exec -- dune build @install
+
+      - run: opam exec -- dune runtest
+
+      # The offline closure carries no I/O and no GMP, checked from the
+      # declared dependencies and then proved by linking.
+      - name: The offline closure stays offline
+        run: opam exec -- ./test/no_io_guard.sh
+
+      - name: Formatting
+        run: opam exec -- dune build @fmt
+
+  # The generated bindings are committed. Regenerating them must reproduce
+  # exactly what is in the tree, or the pin in docs/protocol-pin.md is a
+  # description of something that is no longer there.
+  proto-pin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The vendored protos must match their recorded hashes
+        run: |
+          python3 - <<'PY'
+          import hashlib, io, os, re, sys
+          doc = io.open("docs/protocol-pin.md", encoding="utf-8").read()
+          recorded = dict(re.findall(r"^\| `([^`]+\.proto)` \| `([0-9a-f]{64})` \|$",
+                                     doc, re.M))
+          bad = 0
+          seen = set()
+          for root, _, names in os.walk("proto"):
+              for n in names:
+                  if not n.endswith(".proto"):
+                      continue
+                  p = os.path.join(root, n)
+                  rel = os.path.relpath(p, "proto")
+                  seen.add(rel)
+                  h = hashlib.sha256(io.open(p, "rb").read()).hexdigest()
+                  if recorded.get(rel) != h:
+                      print("MISMATCH %s" % rel); bad += 1
+          for rel in set(recorded) - seen:
+              print("RECORDED BUT ABSENT %s" % rel); bad += 1
+          sys.exit(1 if bad else 0)
+          PY

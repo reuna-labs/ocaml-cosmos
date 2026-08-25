@@ -1,0 +1,10 @@
+; This package owns the socket. Functorising over Mirage_flow.S rather than
+; over an HTTP client is not a preference: the confidential Solo5 targets
+; forbid NET_BASIC outright and sptmac has no networking at all, so vsock is
+; the only transport available there. TLS composes as Tls_mirage.Make over the
+; same signature.
+
+(library
+ (name cosmos_rpc_flow)
+ (public_name cosmos-rpc-flow)
+ (libraries cosmos-rpc lwt cstruct mirage-flow fmt))

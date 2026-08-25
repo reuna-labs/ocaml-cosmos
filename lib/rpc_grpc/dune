@@ -1,0 +1,29 @@
+; The Cosmos gRPC services over the same flow signature as cosmos-rpc-flow.
+;
+; Not h2-mirage: it would do the functorising for us and pull ~48 packages
+; doing it -- conduit-mirage, tcpip, tls-mirage, x509, dns-client, vchan,
+; xenstore -- because it assumes a network stack. The confidential Solo5
+; targets have a vsock instead. What h2 needs from a transport is
+; Gluten_lwt.IO, four functions, so io_of_flow.ml implements those directly.
+; ocaml-tron reached the same conclusion first.
+
+(library
+ (name cosmos_rpc_grpc)
+ (public_name cosmos-rpc-grpc)
+ (libraries
+  cosmos-types
+  cosmos-tx
+  cosmos-proto
+  cosmos-rpc
+  web3-codec-protobuf
+  grpc
+  grpc-lwt
+  h2
+  h2-lwt
+  gluten-lwt
+  faraday
+  bigstringaf
+  lwt
+  cstruct
+  mirage-flow
+  fmt))

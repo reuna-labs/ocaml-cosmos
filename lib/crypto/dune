@@ -1,0 +1,8 @@
+(library
+ (name cosmos_crypto)
+ (public_name cosmos-crypto)
+ ; mirage-crypto-ec supplies the fiat-crypto P256k1 backend. Note what is NOT
+ ; here: mirage-crypto-blockchain, whose reference secp256k1 is what public-key
+ ; recovery needs and what would put zarith -- and therefore GMP -- into this
+ ; closure. Cosmos never recovers a key: it travels in SignerInfo.
+ (libraries cosmos-types digestif mirage-crypto-ec))

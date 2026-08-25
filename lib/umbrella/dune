@@ -1,0 +1,8 @@
+; The offline surface. Transports are deliberately absent: cosmos-rpc-flow,
+; cosmos-rpc-grpc and cosmos-rpc-unix are separate packages so that a consumer
+; linking this one takes on no Lwt, no Unix and no socket.
+
+(library
+ (name cosmos)
+ (public_name cosmos)
+ (libraries cosmos-types cosmos-crypto cosmos-proto cosmos-tx cosmos-rpc))

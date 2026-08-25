@@ -1,0 +1,5 @@
+(library
+ (name cosmos_types)
+ (public_name cosmos-types)
+ ; No zarith here, and none may arrive. See dune-project.
+ (libraries web3-codec-bech32 digestif))

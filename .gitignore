@@ -1,0 +1,9 @@
+_build/
+_opam/
+*.install
+conformance/cosmjs/node_modules/
+conformance/simd/bin/
+validation/solo5*/*.hvt
+validation/solo5*/*.spt
+validation/solo5*/*.o
+testnet-evidence/

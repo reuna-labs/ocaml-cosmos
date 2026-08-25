@@ -1,0 +1,23 @@
+; The structural half of the unikernel claim: link every offline package and no
+; transport. If the closure acquires unix, lwt or a socket anywhere -- including
+; inside a package we do not own -- this stops building, and test/no_io_guard.sh
+; runs it.
+;
+; It is an ordinary executable rather than a Mirage build on purpose: the point
+; is the dependency closure, and checking that needs no Solo5 toolchain. The
+; other half -- a guest that actually boots -- is validation/solo5-image/, which
+; does. See docs/unikernel.md.
+;
+; The offline packages are named individually because dune-project sets
+; implicit_transitive_deps to false; naming them is also what makes this a
+; check that each one links rather than only the umbrella.
+
+(executable
+ (name unikernel)
+ (libraries
+  cosmos
+  cosmos-types
+  cosmos-crypto
+  cosmos-proto
+  cosmos-tx
+  cosmos-rpc))

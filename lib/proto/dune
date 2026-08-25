@@ -1,0 +1,23 @@
+; The generated protobuf bindings. include_subdirs flattens gen/ and
+; gen/google_types/ into this one library, which is what makes the cross-file
+; references the plugin emits -- Google_protobuf_any.Google.Protobuf.Any, and
+; Runtime' = Ocaml_protoc_plugin -- resolve without qualification.
+;
+; The module names are prefixed with their protobuf package
+; (Cosmos_bank_v1beta1_tx, not Tx) because Cosmos defines four tx.proto, three
+; keys.proto and two query.proto in different packages, and the plugin names
+; output after the basename. See tools/gen-proto.sh.
+
+(include_subdirs unqualified)
+
+(library
+ (name cosmos_proto)
+ (public_name cosmos-proto)
+ ; The generated code is not ours to lint. The dev profile promotes warnings
+ ; to errors and generated protobuf trips several by design.
+ (flags
+  (:standard -w -a))
+ ; web3-codec-protobuf is the vendored ocaml-protoc-plugin runtime, and its
+ ; whole closure is base64 + ptime. Note the absence of unix: this package is
+ ; linked into Solo5 unikernels, so that must stay true.
+ (libraries web3-codec-protobuf))
