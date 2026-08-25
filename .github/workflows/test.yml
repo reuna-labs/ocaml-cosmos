@@ -27,6 +27,25 @@ jobs:
       # this one has no zarith at all, and test/no_io_guard.sh below is what
       # keeps that true.
 
+      # The forks. mirage-crypto-ec is not optional and not substitutable:
+      # Mirage_crypto_ec.P256k1 is a Reuna fork addition and released
+      # mirage-crypto-ec has no secp256k1 at all, so without this the build
+      # fails with "Unbound module P256k1" -- which reads like a typo rather
+      # than a missing pin. digestif is pinned for RIPEMD-160 and the 1.4
+      # series.
+      #
+      # These are private repositories. If this step fails to fetch, that is
+      # the G0 launch gate showing itself -- "no opam file points to a private
+      # repository" -- and not a workflow bug. See docs/release.md.
+      - name: Pin the crypto forks
+        run: |
+          M=git+https://github.com/reuna-labs/mirage-crypto.git#toolchain/ocaml-5.5
+          opam pin add -yn mirage-crypto.dev "$M"
+          opam pin add -yn mirage-crypto-rng.dev "$M"
+          opam pin add -yn mirage-crypto-ec.dev "$M"
+          opam pin add -yn digestif.dev \
+            git+https://github.com/reuna-labs/digestif.git#toolchain/ocaml-5.5
+
       # Both live on feat/multiformats, not on the default branch. Naming the
       # branch is not optional: a pin without it resolves to main, which has
       # neither package, and the failure is a confusing "unknown package"
