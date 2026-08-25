@@ -113,6 +113,63 @@ here imports anything not here.
 | `tendermint/types/validator.proto` | `d11afbbc8cc831f7d7e5af3a35d7f1641afd1ec0551e1f4d37ef2902d85a0b4c` |
 | `tendermint/version/types.proto` | `75f74bdc37f509f28763ddb4f6291e5f397d1df252179d66caf60c9d318066fe` |
 
+## Behavioural rules, and where each one comes from
+
+The schema says what the bytes are. It does not say what a node will accept,
+and several of those rules are surprising enough that guessing at them
+produces code that looks right. Each one below is cited to a line in the
+pinned `cosmos-sdk` v0.55.0 tree, and nothing in `lib/` may encode a rule that
+is not here.
+
+| Rule | Source |
+| --- | --- |
+| Bech32 decoding uses a **1023**-character limit, not BIP-173's 90 | [`types/bech32/bech32.go:21`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/bech32/bech32.go#L21) — `bech32.Decode(bech, 1023)` |
+| Encoding converts 8-bit to 5-bit **with** padding; decoding converts back **without** | [`types/bech32/bech32.go:11`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/bech32/bech32.go#L11) and [`:26`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/bech32/bech32.go#L26) |
+| Bech32m is never accepted — the SDK calls btcutil's `bech32.Decode`, which implements BIP-173 only | same file |
+| An address is any **1 to 255** bytes. It is *not* required to be 20 or 32. | [`types/address.go:166-181`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/address.go#L166-L181) and [`types/address/store_key.go:10`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/address/store_key.go#L10) — `MaxAddrLen = 255` |
+| 32 bytes is the "base address" length for module and derived addresses | [`types/address/hash.go:17`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/address/hash.go#L17) — `Len = sha256.Size` |
+| Validator and consensus prefixes are the account prefix plus `valoper` and `valcons` | [`types/address.go:66-76`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/address.go#L66-L76) |
+| The default account prefix is `cosmos` | [`types/address.go:39`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/address.go#L39) |
+| A denomination matches `^[a-zA-Z][a-zA-Z0-9/:._-]{2,127}$` — 3 to 128 characters | [`types/coin.go:848`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/coin.go#L848) |
+
+Two of these are worth stating as prose because they are the ones a reasonable
+implementer gets wrong.
+
+**The 90-character cap does not apply.** BIP-173 caps a bech32 string at 90
+characters because the BCH code only guarantees detection of up to four
+character errors within that length. The Cosmos SDK passes 1023 instead. A
+decoder that enforced 90 would reject addresses the chain accepts; this is
+why `web3-codec-bech32` takes the cap as a parameter rather than fixing it,
+and why every call here passes 1023 explicitly rather than relying on a
+default.
+
+**An address is not 20 bytes, and not 32 either.** `VerifyAddressFormat`
+checks only that the address is non-empty and no longer than 255 bytes; the
+20-byte secp256k1 form and the 32-byte derived form are conventions, not
+rules. The SDK's own test suite round-trips a **10-byte** address. So this
+library decodes what the chain accepts and lets policy be stricter than the
+chain: `Address.of_bytes` takes 1..255, and `Address.is_standard_length` is
+what a policy asks when it wants to insist on 20 or 32.
+
+### Cross-implementation vectors
+
+The address vectors in `test/` are the SDK's own literals, lifted from
+[`types/address_test.go`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/address_test.go)
+and [`types/bech32/bech32_test.go`](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/types/bech32/bech32_test.go)
+rather than generated here, so that they are evidence about the SDK rather
+than about this library agreeing with itself:
+
+| String | Bytes |
+| --- | --- |
+| `cosmos1qqqsyqcyq5rqwzqfys8f67` | `00010203040506070809` |
+| `prefixa1qqqsyqcyq5rqwzqf3953cc` | `00010203040506070809` |
+| `prefixb1qqqsyqcyq5rqwzqf20xxpc` | `00010203040506070809` |
+| `prefixa1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn7hzdtn` | `000102030405060708090a0b0c0d0e0f10111213` |
+| `prefixb1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnrujsuw` | `000102030405060708090a0b0c0d0e0f10111213` |
+
+The last two are the same twenty bytes under two prefixes, which is the
+property this library exists to keep visible.
+
 ## Refreshing
 
 ```sh

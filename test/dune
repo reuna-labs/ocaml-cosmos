@@ -1,3 +1,9 @@
-(test
- (name test_cosmos)
- (libraries cosmos cosmos-types cosmos-tx cosmos-rpc alcotest))
+(tests
+ (names test_cosmos test_address)
+ (libraries
+  cosmos
+  cosmos-types
+  cosmos-tx
+  cosmos-rpc
+  web3-codec-bech32
+  alcotest))

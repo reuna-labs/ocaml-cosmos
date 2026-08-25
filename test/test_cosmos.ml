@@ -6,18 +6,22 @@
    conformance/, from two independent oracles, and asserting them against an
    unimplemented library would only record that it is unimplemented. *)
 
+(* Prefix and Address are implemented now; their tests are test_address.ml.
+   What this file keeps is the property that the *remaining* stubs still fail
+   loudly rather than plausibly, and it names one that is still a stub so the
+   check does not quietly pass by testing nothing. *)
 let unimplemented_is_explicit () =
-  (* A skeleton must fail loudly, not plausibly. Every stub says which function
-     is missing, so a caller who reaches one is not left guessing. *)
-  match Cosmos_types.Prefix.make ~base:"cosmos" Cosmos_types.Prefix.Account with
-  | Ok _ ->
-      Alcotest.fail "Prefix.make claims to work; update this test when it does"
-  | Error msg ->
+  match
+    Cosmos_tx.Sign_doc.digest
+      (Cosmos_tx.Sign_doc.make ~body_bytes:"" ~auth_info_bytes:"" ~chain_id:""
+         ~account_number:0L)
+  with
+  | (_ : string) ->
+      Alcotest.fail "Sign_doc.digest works; move this test to test_tx.ml"
+  | exception Failure msg ->
       Alcotest.(check bool)
-        "the error names the function" true
-        (String.length msg > 0
-        && String.length msg >= 13
-        && String.sub msg 0 13 = "cosmos-types:")
+        "the failure names the function" true
+        (String.length msg >= 10 && String.sub msg 0 10 = "cosmos-tx:")
 
 let unknown_message_is_representable () =
   (* An app-chain message this library has never heard of must have somewhere to
