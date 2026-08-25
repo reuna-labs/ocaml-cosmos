@@ -11,6 +11,30 @@ machine cannot install this package, which is the G0 launch gate in
 `vault/Reuna/Attic/OCaml web3 state of the art status.md`. Publishing anything
 before that is publishing something nobody can install.
 
+### What it looks like in practice
+
+The runner has no git credential for github.com, so `opam pin` on any of the
+six private dependencies fails with
+
+```
+fatal: could not read Username for 'https://github.com': No such device or address
+```
+
+CI therefore checks for a `REUNA_CI_TOKEN` repository secret before it does
+anything else, and skips the build when it is absent rather than spending
+thirty-five minutes building a compiler on the way to a failure it could have
+predicted. The `proto-pin` job needs nothing private and runs either way.
+
+Adding the token makes the build run. It does not close G0: a token is how
+*this* organisation reaches its own forks, and the gate is that an
+unauthenticated clean machine can install the package at all. Closing it means
+upstreaming `Mirage_crypto_ec.P256k1` and the digestif changes, or publishing
+the forks, or vendoring them with provenance — the same choice
+`ocaml-solana` faced and answered for the codec packages by vendoring a
+snapshot at `vendor/web3-codec`. That answer does not transfer here unchanged:
+Solana needs Ed25519, which released mirage-crypto-ec has, while this needs
+secp256k1, which it does not.
+
 ## Order
 
 Dependency order, which is also risk order:

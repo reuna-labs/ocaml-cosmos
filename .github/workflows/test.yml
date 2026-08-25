@@ -14,7 +14,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Six of this repository's dependencies live in private reuna-labs
+      # repositories -- the mirage-crypto fork for P256k1, the digestif fork,
+      # and the two web3-codec packages -- and the runner has no git credential
+      # for github.com by default. Without one, `opam pin` fails with
+      #
+      #   fatal: could not read Username for 'https://github.com'
+      #
+      # This check is FIRST, before setup-ocaml, on purpose: a run that cannot
+      # succeed should cost five seconds rather than the thirty-five minutes
+      # setup-ocaml spends building a compiler before reaching the pin step.
+      #
+      # To turn the build on, add a token with read access to reuna-labs as the
+      # repository secret REUNA_CI_TOKEN. Nothing else changes.
+      #
+      # That the credential is needed at all is the G0 launch gate -- "no opam
+      # file points to a private repository" -- and it is not closed. See
+      # docs/release.md.
+      - name: Are the private dependencies reachable?
+        id: creds
+        env:
+          TOKEN: ${{ secrets.REUNA_CI_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Build skipped::REUNA_CI_TOKEN is not set, so the private pins (mirage-crypto fork, digestif fork, web3-codec) cannot be fetched. proto-pin still runs. See .github/workflows/test.yml."
+          fi
+
+      - name: Let git reach the private remotes
+        if: steps.creds.outputs.ok == 'true'
+        env:
+          TOKEN: ${{ secrets.REUNA_CI_TOKEN }}
+        run: |
+          git config --global \
+            url."https://x-access-token:${TOKEN}@github.com/".insteadOf \
+            "https://github.com/"
+
       - uses: ocaml/setup-ocaml@v3
+        if: steps.creds.outputs.ok == 'true'
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
           opam-local-packages: "*.opam"
@@ -38,6 +77,7 @@ jobs:
       # the G0 launch gate showing itself -- "no opam file points to a private
       # repository" -- and not a workflow bug. See docs/release.md.
       - name: Pin the crypto forks
+        if: steps.creds.outputs.ok == 'true'
         run: |
           M=git+https://github.com/reuna-labs/mirage-crypto.git#toolchain/ocaml-5.5
           opam pin add -yn mirage-crypto.dev "$M"
@@ -51,23 +91,29 @@ jobs:
       # neither package, and the failure is a confusing "unknown package"
       # rather than a missing branch.
       - name: Pin the sibling packages
+        if: steps.creds.outputs.ok == 'true'
         run: |
           B=git+https://github.com/reuna-labs/ocaml-web3-codec.git#feat/multiformats
           opam pin add -yn web3-codec-bech32.dev "$B"
           opam pin add -yn web3-codec-protobuf.dev "$B"
 
-      - run: opam install -y --assume-depexts --deps-only --with-test .
+      - if: steps.creds.outputs.ok == 'true'
+        run: opam install -y --assume-depexts --deps-only --with-test .
 
-      - run: opam exec -- dune build @install
+      - if: steps.creds.outputs.ok == 'true'
+        run: opam exec -- dune build @install
 
-      - run: opam exec -- dune runtest
+      - if: steps.creds.outputs.ok == 'true'
+        run: opam exec -- dune runtest
 
       # The offline closure carries no I/O and no GMP, checked from the
       # declared dependencies and then proved by linking.
       - name: The offline closure stays offline
+        if: steps.creds.outputs.ok == 'true'
         run: opam exec -- ./test/no_io_guard.sh
 
       - name: Formatting
+        if: steps.creds.outputs.ok == 'true'
         run: opam exec -- dune build @fmt
 
   # The generated bindings are committed. Regenerating them must reproduce
