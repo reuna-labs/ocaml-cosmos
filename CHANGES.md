@@ -152,6 +152,22 @@ Repository scaffold and the L0 specification pin.
   encodings as well, and `split.py` fails if they ever diverge from the
   `protoc` fixtures. They currently agree on all seven.
 
+- **Intent.** Derived by decoding the bytes the signature will cover, never
+  from what the builder said it was building — that is the difference between
+  a display and a review. Fee, gas, granter, payer, sequence, account number,
+  chain id, timeout, memo and every message are separate fields, so a policy
+  can test them and a human can be shown them. A message this library cannot
+  read appears as `Unexplainable` rather than aborting the decode: a
+  transaction carrying one must still be reviewable for the others, and the
+  reviewer must be able to see that one of them is unreadable.
+- **Policy.** Fail-closed. `strict` permits nothing, every field is opened
+  deliberately, and `review` returns *every* reason a transaction was refused
+  rather than the first. A policy with no fee ceiling is itself a refusal: the
+  fee is the one amount an attacker can inflate without changing where
+  anything goes. Contract calls, IBC transfers and multi-sends are never
+  approved at this stage — their destinations or payloads are things no policy
+  here has a trusted source for.
+
 ### Not done
 
-Intent and policy. L3 onwards.
+L3 onwards: the transports and the submission state machine.
