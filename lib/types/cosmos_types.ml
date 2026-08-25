@@ -4,6 +4,7 @@
 
 module Prefix = Prefix
 module Address = Address
+module Amount = Amount
 module Denom = Denom
 module Coin = Coin
 module Chain_id = Chain_id

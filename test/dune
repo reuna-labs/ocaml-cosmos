@@ -1,5 +1,5 @@
 (tests
- (names test_cosmos test_address)
+ (names test_cosmos test_address test_amount test_coin)
  (libraries
   cosmos
   cosmos-types
