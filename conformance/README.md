@@ -11,8 +11,8 @@ recorded at scaffold time so the oracles are not chosen for convenience later.
 | --- | --- | --- | --- | --- |
 | `protoc` | C++ | `protoc/` | **in use** | The reference implementation of the wire format, and the only oracle that needs no toolchain beyond `protoc` itself |
 | pure-Python secp256k1 | Python | `oracle/` | **in use** | An independent implementation of the cryptography — see its README |
+| the Go SDK itself | Go | `simd/` | **in use** | The reference implementation of the *protocol* — and the only authority on amino JSON |
 | `@cosmjs/proto-signing` + `@cosmjs/stargate` | TypeScript | `cosmjs/` | not written | What most of the ecosystem's wallets and front ends actually use |
-| the Go SDK's `simd` CLI | Go | `simd/` | not written | The reference implementation of the *protocol*, and therefore the stronger evidence about what a node will accept |
 
 ## What each oracle can and cannot settle
 
@@ -23,6 +23,24 @@ the way the SDK spells it, whether a node accepts the result. Those need
 `cosmjs` and `simd`, and they are the reason both are still listed.
 
 The `oracle/` implementation settles the cryptography and nothing else.
+
+The Go SDK settles the protocol. It is the only source for `SIGN_MODE_LEGACY_AMINO_JSON`,
+which cannot be derived from the schema: the encoding is governed by `amino.*`
+options that interact with key ordering and number spelling in ways a careful
+reading does not reveal. Three rules were established from its output and
+would otherwise have been wrong — `timeout_height` appearing at the top level
+of the document, CosmWasm's `msg` being re-serialised (and therefore
+key-sorted) rather than passed through, and `dont_omitempty` keeping fields
+that would otherwise vanish.
+
+`conformance/simd` deliberately emits the protobuf encodings too, overlapping
+with `protoc`. Two independent oracles agreeing on the same bytes is worth more
+than either alone, and `split.py` fails if they ever disagree.
+
+It uses `x/tx/signing/aminojson`, not `legacytx.StdSignBytes`. The latter is
+deprecated upstream and drives the encoding from Go struct tags rather than
+from the schema options; the two can disagree, and a node verifies against the
+former.
 
 Two, not one, because a single oracle only tells you that two implementations
 agree — yours and its. Where these two disagree, the disagreement is the

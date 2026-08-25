@@ -11,9 +11,11 @@
   test_coin
   test_crypto
   test_profile
-  test_tx)
+  test_tx
+  test_amino)
  (deps
-  (glob_files ../conformance/fixtures/protoc/*.hex))
+  (glob_files ../conformance/fixtures/protoc/*.hex)
+  (glob_files ../conformance/fixtures/amino/*.json))
  (libraries
   cosmos
   cosmos-types

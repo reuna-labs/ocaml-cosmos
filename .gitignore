@@ -3,6 +3,8 @@ _opam/
 *.install
 conformance/cosmjs/node_modules/
 conformance/simd/bin/
+conformance/simd/simd
+
 validation/solo5*/*.hvt
 validation/solo5*/*.spt
 validation/solo5*/*.o

@@ -128,6 +128,30 @@ Repository scaffold and the L0 specification pin.
   protoc's own `Any` expansion, which writes `type.googleapis.com` into
   `type_url` where Cosmos uses the leading-slash form.
 
+- **`SIGN_MODE_LEGACY_AMINO_JSON`.** Matches the SDK's own encoder byte for
+  byte on five documents. The writer is hand-rolled — sorted keys, no
+  whitespace between tokens, integers as decimal strings — so the offline
+  closure still needs no JSON library.
+
+  This is the one part of the transaction layer that could not be written from
+  the schema. Three rules came out of the oracle and would have been guessed
+  wrong: `timeout_height` appears at the top level of the document as well as
+  in the body; CosmWasm's `msg` is spliced in as JSON and *re-serialised*,
+  which sorts its keys, so a call written `{"recipient":…,"amount":…}` signs as
+  `{"amount":…,"recipient":…}` and a signer passing the caller's bytes through
+  would sign what the node does not compute; and `dont_omitempty` keeps
+  several fields that otherwise vanish when empty.
+
+  A message with no `(amino.name)` is refused rather than signed as something
+  else, and a multi-signer transaction is refused because the document holds
+  one sequence.
+- **The Go SDK oracle**, `conformance/simd/`. Runs cosmos-sdk v0.55.0's
+  `x/tx/signing/aminojson` handler — not the deprecated
+  `legacytx.StdSignBytes`, which drives the encoding from Go struct tags
+  rather than from the schema options and can disagree. It emits the protobuf
+  encodings as well, and `split.py` fails if they ever diverge from the
+  `protoc` fixtures. They currently agree on all seven.
+
 ### Not done
 
-Amino JSON, intent and policy. L3 onwards.
+Intent and policy. L3 onwards.
