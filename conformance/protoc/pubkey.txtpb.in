@@ -1,0 +1,5 @@
+# cosmos.crypto.secp256k1.PubKey wrapping the 33-byte compressed public key of
+# private key 1 -- the same key conformance/oracle/secp256k1.py derives, and
+# the same one BIP-173's SegWit example uses. Substituted rather than escaped
+# by hand so that the hex stays readable.
+key: "@@secp256k1_key_1@@"

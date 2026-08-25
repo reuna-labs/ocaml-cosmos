@@ -1,0 +1,5 @@
+# One MsgSend, a memo, and a height timeout. The Any's value is the encoding of
+# msg_send.txtpb.
+messages { type_url: "/cosmos.bank.v1beta1.MsgSend" value: "@@msg_send@@" }
+memo: "sent by ocaml-cosmos"
+timeout_height: 20000000

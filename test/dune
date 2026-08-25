@@ -1,3 +1,7 @@
+; test_tx reads the protoc fixtures, so dune has to copy them into the build
+; tree. conformance/ is data_only_dirs at the root, which is what stops dune
+; looking for dune files inside it.
+
 (tests
  (names
   test_cosmos
@@ -6,7 +10,10 @@
   test_amount_props
   test_coin
   test_crypto
-  test_profile)
+  test_profile
+  test_tx)
+ (deps
+  (glob_files ../conformance/fixtures/protoc/*.hex))
  (libraries
   cosmos
   cosmos-types

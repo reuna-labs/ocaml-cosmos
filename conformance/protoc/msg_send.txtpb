@@ -1,0 +1,5 @@
+# Private key 1 sends 1 ATOM to private key 2. Both addresses come from
+# conformance/oracle/secp256k1.py, so the whole chain is checkable.
+from_address: "cosmos1w508d6qejxtdg4y5r3zarvary0c5xw7k6ah60c"
+to_address: "cosmos1q6hag67dl53wl99vzg42z8eyzfz2xlkvsrxukv"
+amount { denom: "uatom" amount: "1000000" }

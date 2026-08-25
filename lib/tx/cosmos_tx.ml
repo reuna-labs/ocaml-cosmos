@@ -6,6 +6,7 @@ module Msg = Msg
 module Body = Body
 module Auth_info = Auth_info
 module Sign_doc = Sign_doc
+module Tx = Tx
 module Amino_json = Amino_json
 module Intent = Intent
 module Policy = Policy

@@ -3,4 +3,9 @@
  (public_name cosmos-tx)
  ; No yojson. The amino JSON writer here is a canonical encoder over signed
  ; data and is hand-written for that reason; yojson enters at cosmos-rpc.
- (libraries cosmos-types cosmos-crypto cosmos-proto digestif))
+ (libraries
+  cosmos-types
+  cosmos-crypto
+  cosmos-proto
+  web3-codec-protobuf
+  digestif))

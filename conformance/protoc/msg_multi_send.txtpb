@@ -1,0 +1,12 @@
+inputs {
+  address: "cosmos1w508d6qejxtdg4y5r3zarvary0c5xw7k6ah60c"
+  coins { denom: "uatom" amount: "3000000" }
+}
+outputs {
+  address: "cosmos1q6hag67dl53wl99vzg42z8eyzfz2xlkvsrxukv"
+  coins { denom: "uatom" amount: "1000000" }
+}
+outputs {
+  address: "cosmos10ht9tyks4vh7p5p904t340cr9nvahy7u8e84x9"
+  coins { denom: "uatom" amount: "2000000" }
+}

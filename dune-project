@@ -91,6 +91,7 @@
   (cosmos-types (= :version))
   (cosmos-crypto (= :version))
   (cosmos-proto (= :version))
+  (web3-codec-protobuf (>= 0.1.0~alpha1))
   (digestif (>= 1.2.0))
   (alcotest :with-test)
   (qcheck-core :with-test)

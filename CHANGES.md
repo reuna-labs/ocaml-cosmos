@@ -95,6 +95,39 @@ Repository scaffold and the L0 specification pin.
   validating constructor, and they are explicitly not authoritative — gas
   prices are governance parameters.
 
+### L2, in progress
+
+- **The four messages.** `MsgSend`, `MsgMultiSend`, IBC `MsgTransfer` and
+  CosmWasm `MsgExecuteContract` decode and encode. Everything else is
+  `Opaque`, carrying the reason — an unrecognised `type_url` and a recognised
+  one whose payload will not parse are different situations, and both are
+  equally unapprovable. An IBC `receiver` stays a string: it is on the
+  destination chain under a prefix this one cannot know.
+- **`TxBody`, `AuthInfo`, `SignDoc`, `TxRaw`.** Bodies and auth info keep the
+  bytes they were built from or arrived in; `to_bytes` never re-encodes.
+  `Sign_doc.make` takes the typed values rather than two strings, so there is
+  no path that displays one transaction and signs another. `unordered`
+  requires a `timeout_timestamp`, enforced here rather than at the node —
+  without a sequence, the timestamp is the only bound on replay. Fee `payer`
+  and `granter` are surfaced: a signer told the cost and not who bears it has
+  been told the less interesting half.
+- **Signing and verification.** `Tx.sign` frames the signature around the same
+  bytes it covers. `Tx.verify` rebuilds the `SignDoc` from the kept bytes and
+  checks it — which is the check that nothing reshaped them in between, and it
+  fails if the chain id or account number differs.
+
+  The offline link proof now builds, signs and verifies a real 313-byte
+  transaction with no transport linked.
+- **`protoc` as the encoding oracle.** `conformance/protoc/` holds reviewable
+  text-format inputs; `generate.sh` runs `protoc --encode` over them and
+  commits the hex. protoc is the C++ reference implementation of the format
+  and shares nothing with `ocaml-protoc-plugin`, so agreeing with it says the
+  bytes are what the format says — which round-tripping through our own
+  encoder could not. Composite fixtures embed the leaf encodings through
+  `expand.py` rather than hand-escaped bytes, and deliberately not through
+  protoc's own `Any` expansion, which writes `type.googleapis.com` into
+  `type_url` where Cosmos uses the leading-slash form.
+
 ### Not done
 
-L2 onwards. Nothing here builds a transaction yet.
+Amino JSON, intent and policy. L3 onwards.

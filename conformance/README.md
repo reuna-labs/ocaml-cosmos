@@ -7,10 +7,22 @@ committed. Tests compare against these literals; they never compare
 **Status: not written.** This file is the contract the fixtures have to meet,
 recorded at scaffold time so the oracles are not chosen for convenience later.
 
-| Generator | Language | Directory | Why this one |
-| --- | --- | --- | --- |
-| `@cosmjs/proto-signing` + `@cosmjs/stargate` | TypeScript | `cosmjs/` | What most of the ecosystem's wallets and front ends actually use |
-| the Go SDK's `simd` CLI | Go | `simd/` | The reference implementation itself, and therefore the stronger evidence about what a node will accept |
+| Generator | Language | Directory | Status | Why this one |
+| --- | --- | --- | --- | --- |
+| `protoc` | C++ | `protoc/` | **in use** | The reference implementation of the wire format, and the only oracle that needs no toolchain beyond `protoc` itself |
+| pure-Python secp256k1 | Python | `oracle/` | **in use** | An independent implementation of the cryptography — see its README |
+| `@cosmjs/proto-signing` + `@cosmjs/stargate` | TypeScript | `cosmjs/` | not written | What most of the ecosystem's wallets and front ends actually use |
+| the Go SDK's `simd` CLI | Go | `simd/` | not written | The reference implementation of the *protocol*, and therefore the stronger evidence about what a node will accept |
+
+## What each oracle can and cannot settle
+
+`protoc` settles the wire format: whether `body_bytes` and a `SignDoc` are the
+bytes the schema says. It cannot settle protocol questions — whether the
+`SignDoc` was assembled from the right pieces, whether amino JSON is spelled
+the way the SDK spells it, whether a node accepts the result. Those need
+`cosmjs` and `simd`, and they are the reason both are still listed.
+
+The `oracle/` implementation settles the cryptography and nothing else.
 
 Two, not one, because a single oracle only tells you that two implementations
 agree — yours and its. Where these two disagree, the disagreement is the

@@ -1,0 +1,10 @@
+# The receiver is on Osmosis, under a prefix the sending chain cannot know --
+# which is why it is a string in Msg.ibc_transfer and not an Address.t.
+source_port: "transfer"
+source_channel: "channel-141"
+token { denom: "uatom" amount: "500000" }
+sender: "cosmos1w508d6qejxtdg4y5r3zarvary0c5xw7k6ah60c"
+receiver: "osmo1w508d6qejxtdg4y5r3zarvary0c5xw7kdjmmmt"
+timeout_height { revision_number: 1 revision_height: 20000000 }
+timeout_timestamp: 1774000000000000000
+memo: ""

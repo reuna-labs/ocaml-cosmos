@@ -1,4 +1,4 @@
-(** [SignDoc] -- the bytes a Cosmos signature actually covers.
+(** [SignDoc] — the bytes a Cosmos signature actually covers.
 
     {2 The bytes that were signed are the bytes that go out}
 
@@ -6,32 +6,43 @@
     alongside [chain_id] and [account_number]. [TxRaw] then carries those same
     two byte strings to the node.
 
-    They are retained, never re-encoded. Protobuf admits encodings that decode
-    alike and re-encode differently -- field order, non-minimal varints, unknown
-    fields that survive a round trip -- so re-serializing a decoded [TxBody] can
-    produce different bytes from the ones the signature covers. The node would
-    then verify a signature over one transaction while executing another, or
-    more likely reject it outright and leave the caller debugging the wrong
-    layer.
+    So {!make} takes a {!Body.t} and an {!Auth_info.t} rather than two strings,
+    and takes their kept bytes. Handing it raw strings would let a caller
+    display one transaction and sign another with nothing in the types to stop
+    them.
 
-    This is [ocaml-tron]'s rule about [raw_data], and here it is load-bearing
-    twice over: the signature covers a concatenation of both byte strings.
+    Protobuf admits encodings that decode alike and re-encode differently —
+    field order, non-minimal varints, unknown fields that survive a round trip —
+    so a re-encode of a decoded body is not reliably the body that was decoded.
+    Here that matters twice over, because the signature covers a concatenation
+    of both.
 
-    Skeleton: the signatures below are the contract; the bodies are G10 L2 work.
-*)
+    {2 What is signed is not what is broadcast}
+
+    A [SignDoc] is never transmitted. It is constructed on both sides — here,
+    and again by the node from the [TxRaw] it received plus the chain id and
+    account number it already knows — and the two must agree byte for byte. That
+    is why {!to_bytes} matters and why the conformance fixtures pin it. *)
 
 type t
 
 val make :
-  body_bytes:string ->
-  auth_info_bytes:string ->
-  chain_id:string ->
+  body:Body.t ->
+  auth_info:Auth_info.t ->
+  chain_id:Cosmos_types.Chain_id.t ->
   account_number:int64 ->
   t
+
+val body_bytes : t -> string
+val auth_info_bytes : t -> string
+val chain_id : t -> Cosmos_types.Chain_id.t
+val account_number : t -> int64
 
 val to_bytes : t -> string
 (** The serialized [SignDoc]. *)
 
 val digest : t -> string
-(** [SHA-256] of {!to_bytes} -- 32 bytes, and what {!Cosmos_crypto.sign_digest}
-    is given. *)
+(** [SHA-256] of {!to_bytes} — 32 bytes, and what {!Cosmos_crypto.sign_digest}
+    is given. The SDK hashes with SHA-256 before signing
+    ([secp256k1_nocgo.go:17]); doing it here rather than inside the signer keeps
+    the choice of hash visible at the call site. *)

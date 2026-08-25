@@ -1,0 +1,8 @@
+# The document that is actually signed. body_bytes and auth_info_bytes are the
+# encodings of tx_body and auth_info -- which is the whole point: SignDoc
+# carries them as opaque strings, so what gets signed is whatever those two
+# serialised to and never a re-encoding of them.
+body_bytes: "@@tx_body@@"
+auth_info_bytes: "@@auth_info@@"
+chain_id: "cosmoshub-4"
+account_number: 42

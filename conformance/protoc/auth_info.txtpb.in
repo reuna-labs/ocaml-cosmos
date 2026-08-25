@@ -1,0 +1,16 @@
+# One secp256k1 signer in SIGN_MODE_DIRECT at sequence 7, paying 1000uatom for
+# 200000 gas. No fee granter and no payer: the delegation cases are separate
+# fixtures, because a signer that cannot tell them apart is being told the cost
+# and not who bears it.
+signer_infos {
+  public_key {
+    type_url: "/cosmos.crypto.secp256k1.PubKey"
+    value: "@@pubkey@@"
+  }
+  mode_info { single { mode: SIGN_MODE_DIRECT } }
+  sequence: 7
+}
+fee {
+  amount { denom: "uatom" amount: "1000" }
+  gas_limit: 200000
+}

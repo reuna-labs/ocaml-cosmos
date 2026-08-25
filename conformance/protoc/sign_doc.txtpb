@@ -1,0 +1,8 @@
+# The document that is actually signed. body_bytes and auth_info_bytes are the
+# encodings of tx_body and auth_info -- which is the whole point: SignDoc
+# carries them as opaque strings, so what gets signed is whatever those two
+# serialised to and never a re-encoding of them.
+body_bytes: "\012\220\001\012\034/cosmos.bank.v1beta1.MsgSend\022p\012-cosmos1w508d6qejxtdg4y5r3zarvary0c5xw7k6ah60c\022-cosmos1q6hag67dl53wl99vzg42z8eyzfz2xlkvsrxukv\032\020\012\005uatom\022\0071000000\022\024sent by ocaml-cosmos\030\200\332\304\011"
+auth_info_bytes: "\012P\012F\012\037/cosmos.crypto.secp256k1.PubKey\022#\012!\002y\276f~\371\334\273\254U\240b\225\316\207\013\007\002\233\374\333-\316(\331Y\362\201[\026\370\027\230\022\004\012\002\010\001\030\007\022\023\012\015\012\005uatom\022\0041000\020\300\232\014"
+chain_id: "cosmoshub-4"
+account_number: 42
