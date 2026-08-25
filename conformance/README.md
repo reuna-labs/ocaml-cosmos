@@ -63,3 +63,12 @@ a clock, in the generators any more than in `lib/`.
 CI runs both and diffs `conformance/fixtures/`. Any drift fails the build: a
 generator that no longer reproduces the committed bytes means either the SDK
 changed or we did, and neither is something to discover at release time.
+
+The CI job that does this is **not in `.github/workflows/test.yml` yet**. It
+was written and then removed, because guarding it on
+`hashFiles('conformance/fixtures/**')` is not valid in a job-level `if` and
+GitHub's response to that is to fail the whole workflow in zero seconds with
+no log and no jobs — the workflow's name even shows as its path in the API,
+which is the only visible symptom. Add the job back when there are fixtures
+for it to check, unconditionally, rather than guarding it on their existence.
+`ocaml-solana/.github/workflows/test.yml` has the shape to copy.

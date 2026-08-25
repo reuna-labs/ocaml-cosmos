@@ -5,40 +5,6 @@ on:
   pull_request:
 
 jobs:
-  # The oracles first: if the fixtures have drifted, everything downstream is
-  # being checked against the wrong answer. Skipped while conformance/ is
-  # empty -- see conformance/README.md for what goes in it.
-  sdk-conformance:
-    # The org's self-hosted runner, as ocaml-solana uses. GitHub-hosted minutes
-    # are not available for private repositories here -- a ubuntu-latest job
-    # fails at zero seconds without producing a log.
-    runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
-    if: ${{ hashFiles('conformance/fixtures/**') != '' }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
-      - name: Regenerate the CosmJS fixtures
-        run: |
-          npm ci --prefix conformance/cosmjs
-          npm --prefix conformance/cosmjs run generate
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.24"
-
-      - name: Regenerate the simd fixtures
-        run: conformance/simd/generate.sh
-
-      # A generator that no longer reproduces the committed bytes means either
-      # the SDK changed or we did. Either way it is not something to discover
-      # at release time.
-      - name: The fixtures must not have moved
-        run: git diff --exit-code conformance/fixtures/
-
   build:
     runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
     strategy:
