@@ -1,9 +1,12 @@
 (tests
- (names test_cosmos test_address test_amount test_coin)
+ (names test_cosmos test_address test_amount test_coin test_crypto)
  (libraries
   cosmos
   cosmos-types
+  cosmos-crypto
   cosmos-tx
   cosmos-rpc
   web3-codec-bech32
+  digestif
+  mirage-crypto-ec
   alcotest))

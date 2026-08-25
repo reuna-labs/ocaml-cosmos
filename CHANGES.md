@@ -50,6 +50,36 @@ Repository scaffold and the L0 specification pin.
   plugin reports "Tried to write the same file twice" and emits nothing.
   Default is off, so no existing consumer changes.
 
+### L1, in progress
+
+- **Prefixes and addresses.** Reading the pinned Go source rather than working
+  from memory changed three rules. Bech32 decoding uses a 1023-character limit,
+  not BIP-173's 90 (`types/bech32/bech32.go:21`). An address is any 1 to 255
+  bytes — `VerifyAddressFormat` does not require 20 or 32, and the SDK's own
+  tests round-trip a ten-byte address — so `of_bytes` decodes what the chain
+  accepts and `is_standard_length` is what a policy asks. Encoding pads the
+  8-to-5 bit conversion and decoding must not. Vectors are the SDK's own
+  literals.
+- **Amounts.** A fixed 256-bit unsigned integer, sixteen 16-bit limbs, no
+  bignum: `math.Int` is capped at 256 bits and 64 is not enough for an
+  eighteen-decimal token. Every operation that can leave the range returns
+  `Error`; nothing wraps. Checked against Python's arbitrary-precision
+  integers.
+- **Denominations and coins.** The SDK's denom regular expression, matched by
+  hand so the closure needs no regular-expression library. Coins deliberately
+  do not add.
+- **secp256k1.** Signing over a caller-supplied 32-byte digest, RFC 6979
+  deterministic, normalised to low-S — which the SDK's verifier requires before
+  it checks anything else (`secp256k1_nocgo.go:43-51`). Normalisation uses
+  `Primitive.scalar_negate`, constant time and needing no bignum, rather than
+  the arbitrary-precision arithmetic `ocaml-tron` does it with. Addresses are
+  `RIPEMD160(SHA256(compressed pubkey))`.
+
+  The vectors come from `conformance/oracle/secp256k1.py`, a complete
+  independent implementation written for the purpose. One of them predates both:
+  private key 1 derives hash160 `751e76e8…`, the witness program in BIP-173's
+  own SegWit example.
+
 ### Not done
 
-L1 onwards. Nothing here signs anything yet.
+L2 onwards. Nothing here builds a transaction yet.
