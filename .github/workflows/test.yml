@@ -9,7 +9,10 @@ jobs:
   # being checked against the wrong answer. Skipped while conformance/ is
   # empty -- see conformance/README.md for what goes in it.
   sdk-conformance:
-    runs-on: ubuntu-latest
+    # The org's self-hosted runner, as ocaml-solana uses. GitHub-hosted minutes
+    # are not available for private repositories here -- a ubuntu-latest job
+    # fails at zero seconds without producing a log.
+    runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
     if: ${{ hashFiles('conformance/fixtures/**') != '' }}
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +40,7 @@ jobs:
         run: git diff --exit-code conformance/fixtures/
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
     strategy:
       fail-fast: false
       matrix:
@@ -48,20 +51,27 @@ jobs:
       - uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          opam-local-packages: "*.opam"
+          # The runner deliberately provides no passwordless sudo, so opam
+          # cannot set up its bubblewrap sandbox. ocaml-solana does the same.
+          opam-disable-sandboxing: true
 
       # No GMP step here, deliberately. ocaml-tron's workflow builds a
       # hash-verified GMP prefix because zarith is unavoidable in its closure;
       # this one has no zarith at all, and test/no_io_guard.sh below is what
       # keeps that true.
 
+      # Both live on feat/multiformats, not on the default branch. Naming the
+      # branch is not optional: a pin without it resolves to main, which has
+      # neither package, and the failure is a confusing "unknown package"
+      # rather than a missing branch.
       - name: Pin the sibling packages
         run: |
-          opam pin add -yn web3-codec-bech32.dev \
-            git+https://github.com/reuna-labs/ocaml-web3-codec.git
-          opam pin add -yn web3-codec-protobuf.dev \
-            git+https://github.com/reuna-labs/ocaml-web3-codec.git
+          B=git+https://github.com/reuna-labs/ocaml-web3-codec.git#feat/multiformats
+          opam pin add -yn web3-codec-bech32.dev "$B"
+          opam pin add -yn web3-codec-protobuf.dev "$B"
 
-      - run: opam install --deps-only --with-test .
+      - run: opam install -y --assume-depexts --deps-only --with-test .
 
       - run: opam exec -- dune build @install
 
@@ -79,7 +89,7 @@ jobs:
   # exactly what is in the tree, or the pin in docs/protocol-pin.md is a
   # description of something that is no longer there.
   proto-pin:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
     steps:
       - uses: actions/checkout@v4
 
