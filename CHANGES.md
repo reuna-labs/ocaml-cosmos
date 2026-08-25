@@ -80,6 +80,21 @@ Repository scaffold and the L0 specification pin.
   private key 1 derives hash160 `751e76e8…`, the witness program in BIP-173's
   own SegWit example.
 
+- **Fixed-point decimals, chain ids and profiles.** `LegacyDec` is eighteen
+  decimal places (`math/legacy_dec.go:20-21`) and reaches the wire as the
+  integer scaled by 10^18, not as the human spelling — both are constructible
+  and neither is called `of_string` alone. The one arithmetic operation is
+  `mul_ceil`, because the one thing a signer computes is a fee, and rounding a
+  fee down produces a transaction the node refuses for being a base unit
+  short. Chain ids are 1..50 characters (CometBFT `types/genesis.go:20`) and
+  are a type because they are inside `SignDoc`.
+
+  A chain is a record, never a branch: prefix, chain id, fee denomination,
+  exponent and minimum gas price are all that differ across the ecosystem.
+  Six profiles are committed for testing and examples, all built through the
+  validating constructor, and they are explicitly not authoritative — gas
+  prices are governance parameters.
+
 ### Not done
 
 L2 onwards. Nothing here builds a transaction yet.

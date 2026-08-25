@@ -59,5 +59,18 @@ val compare : t -> t -> int
 val equal : t -> t -> bool
 val is_zero : t -> bool
 
+val divmod_small : t -> int -> (t * int, string) result
+(** [divmod_small a d] is [(a / d, a mod d)].
+
+    [d] must be in [1 .. 1_000_000_000]. The bound is not arbitrary: the long
+    division carries a remainder into the next limb as
+    [remainder * 2{^16} + limb], and a larger divisor would let that leave
+    OCaml's 63-bit int. A divisor of 10{^ 18} — the fixed-point scale — is
+    reached by applying this twice, which is what {!Cosmos_types.Dec} does.
+
+    Division is here rather than as a general [div] because nothing in this
+    protocol divides one amount by another. Fixed-point scaling does, by a known
+    power of ten, and that is the whole requirement. *)
+
 val bit_length : t -> int
 (** Number of significant bits; [0] for zero. *)

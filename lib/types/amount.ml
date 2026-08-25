@@ -118,7 +118,7 @@ let mul_small_add a m d =
 
 (* [a / d] and [a mod d], for printing. [d] is small enough that
    [rem * 2^16 + limb] stays well inside a native int. *)
-let divmod_small a d =
+let divmod_small_unchecked a d =
   let q = make () in
   let rem = ref 0 in
   for i = limbs - 1 downto 0 do
@@ -127,6 +127,15 @@ let divmod_small a d =
     rem := cur mod d
   done;
   (q, !rem)
+
+let max_small_divisor = 1_000_000_000
+
+let divmod_small a d =
+  if d < 1 || d > max_small_divisor then
+    Error
+      (Printf.sprintf "amount: divisor must be in 1..%d, got %d"
+         max_small_divisor d)
+  else Ok (divmod_small_unchecked a d)
 
 let of_int n =
   if n < 0 then Error "amount: negative"
@@ -174,7 +183,7 @@ let to_string a =
     let parts = ref [] in
     let cur = ref a in
     while not (is_zero !cur) do
-      let q, r = divmod_small !cur chunk in
+      let q, r = divmod_small_unchecked !cur chunk in
       parts := r :: !parts;
       cur := q
     done;
