@@ -28,8 +28,10 @@
   cosmos-tx
   cosmos-rpc
   cosmos-rpc-flow
+  cosmos-rpc-grpc
   web3-codec-bech32
   digestif
+  yojson
   mirage-crypto-ec
   alcotest
   qcheck-core

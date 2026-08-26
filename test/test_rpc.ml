@@ -194,6 +194,61 @@ let requests_are_well_formed () =
     {|{"jsonrpc":"2.0","id":3,"method":"broadcast_tx_sync","params":{"tx":"Af8="}}|}
     (Rpc.Codec.request ~id:3 b)
 
+(* --- the two transports agree ------------------------------------------- *)
+
+let both_transports_ask_the_same_question () =
+  (* The claim cosmos-rpc-grpc makes is that it is a second way to carry the
+     same protocol, not a second protocol. Both paths encode the same protobuf
+     request; the JSON-RPC one then wraps it in an ABCI query and hex-encodes
+     it, and the gRPC one sends it as the message body.
+
+     So the bytes inside must be identical, and that is checkable without a
+     node. If they ever diverge, one of the two is asking a different question
+     and the "two wire paths, one set of types" claim is false. *)
+  let a = addr key1 in
+  let denom =
+    ok
+      (Result.map_error
+         (fun e -> Rpc.Error.Malformed e)
+         (Types.Denom.of_string "uatom"))
+  in
+  let hex_of s =
+    String.concat ""
+      (List.map
+         (fun c -> Printf.sprintf "%02x" (Char.code c))
+         (List.init (String.length s) (String.get s)))
+  in
+  (* The JSON-RPC request carries the encoded protobuf as hex in "data". *)
+  let json_data m =
+    match List.assoc "data" (Rpc.Method.params m) with
+    | `String s -> s
+    | _ -> Alcotest.fail "data is not a string"
+  in
+  (* Checked one at a time rather than in a list: the two methods have
+     different result types, so a list of pairs would not typecheck -- which is
+     the Method type doing its job. *)
+  Alcotest.(check string)
+    "account: both transports encode the same request"
+    (json_data (Rpc.Query.account ~base:"cosmos" a))
+    (hex_of (Cosmos_rpc_grpc.Method.account ~base:"cosmos" a).request);
+  Alcotest.(check string)
+    "balance: both transports encode the same request"
+    (json_data (Rpc.Query.balance ~base:"cosmos" a ~denom))
+    (hex_of (Cosmos_rpc_grpc.Method.balance ~base:"cosmos" a ~denom).request)
+
+let grpc_status_codes_are_not_abci_codes () =
+  (* Both land in Error.Abci, so the codespace is what tells them apart. gRPC
+     code 5 is NOT_FOUND and ABCI code 5 is insufficient funds; a reader given
+     the number alone would have no way to know which. *)
+  let e = Rpc.Error.Abci { code = 5; codespace = "grpc"; log = "NOT_FOUND" } in
+  let s = Rpc.Error.to_string e in
+  let says needle =
+    let n = String.length needle and m = String.length s in
+    let rec at i = i + n <= m && (String.sub s i n = needle || at (i + 1)) in
+    at 0
+  in
+  Alcotest.(check bool) ("names the codespace: " ^ s) true (says "grpc")
+
 let () =
   Alcotest.run "cosmos-rpc"
     [
@@ -219,5 +274,11 @@ let () =
             retryable_means_transport_only;
         ] );
       ( "requests",
-        [ Alcotest.test_case "well formed" `Quick requests_are_well_formed ] );
+        [
+          Alcotest.test_case "well formed" `Quick requests_are_well_formed;
+          Alcotest.test_case "both transports ask the same question" `Quick
+            both_transports_ask_the_same_question;
+          Alcotest.test_case "grpc codes are not abci codes" `Quick
+            grpc_status_codes_are_not_abci_codes;
+        ] );
     ]

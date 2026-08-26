@@ -211,6 +211,24 @@ Repository scaffold and the L0 specification pin.
   routes on it and answers 403 to a request whose `Host` is the address it was
   dialled at.
 
+- **gRPC over the same flow.** `cosmos.auth`/`cosmos.bank` queries and
+  `cosmos.tx.v1beta1.Service/Simulate`, decoding into the values the JSON-RPC
+  path produces — which is what makes the two comparable rather than merely
+  coexisting. A test checks that both transports encode a byte-identical
+  request, so a divergence would be caught without a node.
+
+  Not `h2-mirage`: it would functorise for us and pull ~48 packages doing it,
+  because it assumes a network stack the confidential Solo5 targets do not
+  have. `Io_of_flow` implements the four functions `Gluten_lwt.IO` wants,
+  taken from `ocaml-tron` where it is already chain-agnostic.
+
+  gRPC status codes land in `Error.Abci` with codespace `grpc`, because gRPC
+  code 5 is `NOT_FOUND` and ABCI code 5 is insufficient funds — the number
+  alone does not say which.
+- **`validation/grpc-flow/`** links the whole HTTP/2 stack over two in-memory
+  buffers. `test/no_io_guard.sh` now builds both flow proofs and runs with no
+  warnings.
+
 ### Not done
 
-gRPC, and the signing smoke against a testnet.
+The signing smoke against a testnet, and L4 onwards.
