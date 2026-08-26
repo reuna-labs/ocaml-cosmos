@@ -107,7 +107,10 @@
   (dune (>= 3.6))
   (cosmos-types (= :version))
   (cosmos-tx (= :version))
+  (cosmos-proto (= :version))
+  (web3-codec-protobuf (>= 0.1.0~alpha1))
   (yojson (>= 2.0.0))
+  (base64 (>= 3.1.0))
   (alcotest :with-test)))
 
 (package

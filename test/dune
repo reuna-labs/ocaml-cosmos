@@ -13,10 +13,13 @@
   test_profile
   test_tx
   test_amino
-  test_policy)
+  test_policy
+  test_rpc
+  test_submission)
  (deps
   (glob_files ../conformance/fixtures/protoc/*.hex)
-  (glob_files ../conformance/fixtures/amino/*.json))
+  (glob_files ../conformance/fixtures/amino/*.json)
+  (glob_files ../conformance/fixtures/rpc/*.json))
  (libraries
   cosmos
   cosmos-types

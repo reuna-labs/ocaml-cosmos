@@ -3,4 +3,10 @@
  (public_name cosmos-rpc)
  ; Pure. The transport is a module type, not a dependency -- note the absence
  ; of lwt, cstruct and mirage-flow, all of which live in cosmos-rpc-flow.
- (libraries cosmos-types cosmos-tx yojson))
+ (libraries
+  cosmos-types
+  cosmos-tx
+  cosmos-proto
+  web3-codec-protobuf
+  yojson
+  base64))
