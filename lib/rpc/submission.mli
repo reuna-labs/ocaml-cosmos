@@ -76,6 +76,27 @@ type t
 
 val start : config -> t
 
+val resume : config -> hash:string -> t
+(** Pick up polling a transaction that was already broadcast.
+
+    {2 What is worth persisting across a restart, and what is not}
+
+    Exactly one thing: the hash. Everything else this machine holds is
+    re-derivable from the chain and is {i safer} re-derived — the account number
+    and sequence because the chain is the thing counting them, and the signed
+    bytes because they were signed for a state that may have moved while the
+    process was down.
+
+    A signer that persisted its whole state and resumed mid-broadcast would be
+    re-broadcasting bytes it can no longer justify. A signer that persisted
+    nothing would have no way to find out what happened to a transaction it had
+    already sent, which is the one question a restart leaves open — and the
+    expensive one, because the answer might be "it went through".
+
+    So: write the hash before broadcasting, and resume with it afterwards. If
+    the transaction never arrived, polling ends in {!Gave_up} and the caller
+    starts again from {!start}; if it did, this finds out. *)
+
 val next : t -> request
 (** What to do now. *)
 

@@ -5,6 +5,70 @@ on:
   pull_request:
 
 jobs:
+  # The oracles first: if the fixtures have drifted, everything downstream is
+  # being checked against the wrong answer.
+  #
+  # None of these needs a private dependency, so unlike `build` they run
+  # whether or not REUNA_CI_TOKEN is set. That is the point of keeping the
+  # conformance inputs free of the fork closure.
+  conformance:
+    runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
+    steps:
+      - uses: actions/checkout@v4
+
+      # The pin document is only worth having if it describes the tree that is
+      # actually there. Checked before anything is regenerated from it.
+      - name: The vendored protos must match their recorded hashes
+        run: python3 .github/check-proto-pin.py
+
+      # protoc: the reference implementation of the wire format.
+      #
+      # Downloaded to a runner-temp prefix and hash-verified rather than
+      # installed: the org runner deliberately provides no passwordless sudo,
+      # which is the same reason ocaml-solana builds its own GMP. The version
+      # is pinned because the committed fixtures were produced with it, and a
+      # different protoc regenerating them would be testing the wrong thing.
+      - name: protoc, without host privileges
+        env:
+          PROTOC_VERSION: "36.0"
+          PROTOC_SHA256: bc8211ce760bd43ee21ddc145d6d9dbaeeabae205267a79d9054a240e367d4b4
+        run: |
+          archive="$RUNNER_TEMP/protoc.zip"
+          prefix="$RUNNER_TEMP/protoc"
+          curl --fail --location --retry 5 --retry-all-errors \
+            --connect-timeout 20 --output "$archive" \
+            "https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOC_VERSION/protoc-$PROTOC_VERSION-linux-x86_64.zip"
+          echo "$PROTOC_SHA256  $archive" | sha256sum --check --strict
+          unzip -q -o "$archive" -d "$prefix"
+          echo "$prefix/bin" >> "$GITHUB_PATH"
+
+      - name: Regenerate the protoc fixtures
+        run: |
+          protoc --version
+          conformance/protoc/generate.sh
+
+      # The Go SDK: the reference implementation of the protocol, and the only
+      # authority on amino JSON.
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: Regenerate the Go SDK fixtures, and cross-check against protoc
+        run: conformance/simd/generate.sh
+
+      # CosmJS: what the ecosystem's wallets actually run. A library that
+      # matched the SDK and disagreed with this would be correct and unusable.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Regenerate the CosmJS fixtures, and cross-check against both
+        run: conformance/cosmjs/generate.sh
+
+      # A generator that no longer reproduces the committed bytes means either
+      # an SDK changed or we did. Either way it is not something to discover at
+      # release time.
+      - name: The fixtures must not have moved
+        run: git diff --exit-code conformance/fixtures/
+
   build:
     runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
     strategy:
@@ -115,35 +179,3 @@ jobs:
       - name: Formatting
         if: steps.creds.outputs.ok == 'true'
         run: opam exec -- dune build @fmt
-
-  # The generated bindings are committed. Regenerating them must reproduce
-  # exactly what is in the tree, or the pin in docs/protocol-pin.md is a
-  # description of something that is no longer there.
-  proto-pin:
-    runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: The vendored protos must match their recorded hashes
-        run: |
-          python3 - <<'PY'
-          import hashlib, io, os, re, sys
-          doc = io.open("docs/protocol-pin.md", encoding="utf-8").read()
-          recorded = dict(re.findall(r"^\| `([^`]+\.proto)` \| `([0-9a-f]{64})` \|$",
-                                     doc, re.M))
-          bad = 0
-          seen = set()
-          for root, _, names in os.walk("proto"):
-              for n in names:
-                  if not n.endswith(".proto"):
-                      continue
-                  p = os.path.join(root, n)
-                  rel = os.path.relpath(p, "proto")
-                  seen.add(rel)
-                  h = hashlib.sha256(io.open(p, "rb").read()).hexdigest()
-                  if recorded.get(rel) != h:
-                      print("MISMATCH %s" % rel); bad += 1
-          for rel in set(recorded) - seen:
-              print("RECORDED BUT ABSENT %s" % rel); bad += 1
-          sys.exit(1 if bad else 0)
-          PY

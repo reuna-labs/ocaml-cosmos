@@ -12,7 +12,7 @@ recorded at scaffold time so the oracles are not chosen for convenience later.
 | `protoc` | C++ | `protoc/` | **in use** | The reference implementation of the wire format, and the only oracle that needs no toolchain beyond `protoc` itself |
 | pure-Python secp256k1 | Python | `oracle/` | **in use** | An independent implementation of the cryptography — see its README |
 | the Go SDK itself | Go | `simd/` | **in use** | The reference implementation of the *protocol* — and the only authority on amino JSON |
-| `@cosmjs/proto-signing` + `@cosmjs/stargate` | TypeScript | `cosmjs/` | not written | What most of the ecosystem's wallets and front ends actually use |
+| `@cosmjs/proto-signing` + `@cosmjs/amino` | TypeScript | `cosmjs/` | **in use** | What the ecosystem's wallets and front ends actually run |
 
 ## What each oracle can and cannot settle
 
@@ -36,6 +36,12 @@ that would otherwise vanish.
 `conformance/simd` deliberately emits the protobuf encodings too, overlapping
 with `protoc`. Two independent oracles agreeing on the same bytes is worth more
 than either alone, and `split.py` fails if they ever disagree.
+
+CosmJS settles a question neither of the others can: what a user's wallet will
+actually sign. A library that matched the specification and disagreed with
+CosmJS would be correct and unusable. It cross-checks against both the others
+rather than committing a third set of bytes — `cosmjs/check.py` fails if any
+two of the three disagree.
 
 It uses `x/tx/signing/aminojson`, not `legacytx.StdSignBytes`. The latter is
 deprecated upstream and drives the encoding from Go struct tags rather than

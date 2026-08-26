@@ -17,7 +17,8 @@
   test_rpc
   test_submission
   test_http
-  test_transcript)
+  test_transcript
+  test_resilience)
  (deps
   (glob_files ../conformance/fixtures/protoc/*.hex)
   (glob_files ../conformance/fixtures/amino/*.json)

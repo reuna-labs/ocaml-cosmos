@@ -16,17 +16,29 @@
 #
 # Requires protoc on PATH. Nothing else -- no network, no SDK, no toolchain.
 
-set -eu
+# pipefail is not optional here. Without it a missing tool in a pipeline exits
+# 0 and the redirect has already created an empty file, so `protoc ... | xxd`
+# with no xxd installed writes an empty fixture and reports success. That
+# produced a run where every cross-check "failed" against nothing, and it could
+# just as easily have produced one where empty matched empty.
+set -euo pipefail
 cd "$(dirname "$0")/../.."
+
+for tool in protoc python3; do
+  command -v "$tool" >/dev/null || { echo "$tool is not on PATH" >&2; exit 1; }
+done
 
 out=conformance/fixtures/protoc
 mkdir -p "$out"
 
+# python3 rather than xxd: it is needed anyway for expand.py, and xxd is absent
+# from most minimal images -- including the one CI runs in.
 emit() {
   name="$1"; message="$2"; file="$3"
   protoc -I proto "--encode=$message" "$file" \
     < "conformance/protoc/$name.txtpb" \
-    | xxd -p | tr -d '\n' > "$out/$name.hex"
+    | python3 -c 'import sys; sys.stdout.write(sys.stdin.buffer.read().hex())' \
+    > "$out/$name.hex"
   printf '\n' >> "$out/$name.hex"
   echo "  $name  <- $message"
 }

@@ -37,6 +37,12 @@ type t = { config : config; state : state; rebuilds : int }
 
 let start config = { config; state = Checking_node; rebuilds = 0 }
 
+(* The hash is the only thing worth carrying across a restart; see the .mli.
+   Resuming goes straight to polling, because the question a restart leaves
+   open is what happened to the transaction and not what to build next. *)
+let resume config ~hash =
+  { config; state = Polling { hash; polls = 0 }; rebuilds = 0 }
+
 let next t =
   match t.state with
   | Checking_node -> Check_node

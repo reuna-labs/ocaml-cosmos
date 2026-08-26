@@ -15,8 +15,10 @@
 #
 # Requires Go and, on the first run, network access to fetch the SDK.
 
-set -eu
+set -euo pipefail
 cd "$(dirname "$0")"
+
+command -v go >/dev/null || { echo "go is not on PATH" >&2; exit 1; }
 
 mkdir -p ../fixtures
 # sonic prints a warning about the host CPU to stderr; it is not a failure.

@@ -1,11 +1,11 @@
+
 _build/
 _opam/
 *.install
 conformance/cosmjs/node_modules/
 conformance/simd/bin/
 conformance/simd/simd
-
-validation/solo5*/*.hvt
-validation/solo5*/*.spt
-validation/solo5*/*.o
 testnet-evidence/
+validation/solo5*/*.hvt
+validation/solo5*/*.o
+validation/solo5*/*.spt
