@@ -3,9 +3,17 @@
 ;
 ; Neither runs as part of `dune runtest`: ordinary tests are hermetic.
 
-(executable
- (name query)
- (modules query)
- (public_name cosmos-query)
+(executables
+ (names query testnet_smoke)
+ (modules query testnet_smoke)
+ (public_names cosmos-query cosmos-testnet-smoke)
  (package cosmos-rpc-unix)
- (libraries cosmos-rpc cosmos-rpc-unix cosmos-types lwt lwt.unix))
+ (libraries
+  cosmos-rpc
+  cosmos-rpc-unix
+  cosmos-types
+  cosmos-crypto
+  cosmos-tx
+  cosmos-signer
+  lwt
+  lwt.unix))

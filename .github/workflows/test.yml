@@ -95,6 +95,9 @@ jobs:
       # That the credential is needed at all is the G0 launch gate -- "no opam
       # file points to a private repository" -- and it is not closed. See
       # docs/release.md.
+      #
+      # The conformance job deliberately needs none of this, so the oracles are
+      # checked on every push whether or not the build can run.
       - name: Are the private dependencies reachable?
         id: creds
         env:
@@ -104,7 +107,7 @@ jobs:
             echo "ok=true" >> "$GITHUB_OUTPUT"
           else
             echo "ok=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Build skipped::REUNA_CI_TOKEN is not set, so the private pins (mirage-crypto fork, digestif fork, web3-codec) cannot be fetched. proto-pin still runs. See .github/workflows/test.yml."
+            echo "::notice title=Build skipped::REUNA_CI_TOKEN is not set, so the private pins (mirage-crypto fork, digestif fork, web3-codec) cannot be fetched. The conformance job still runs, and needs nothing private. See .github/workflows/test.yml."
           fi
 
       - name: Let git reach the private remotes

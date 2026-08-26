@@ -23,7 +23,13 @@ fatal: could not read Username for 'https://github.com': No such device or addre
 CI therefore checks for a `REUNA_CI_TOKEN` repository secret before it does
 anything else, and skips the build when it is absent rather than spending
 thirty-five minutes building a compiler on the way to a failure it could have
-predicted. The `proto-pin` job needs nothing private and runs either way.
+predicted.
+
+The `conformance` job needs nothing private and runs either way — the pin
+check, protoc, the Go SDK and CosmJS. That is the payoff for keeping the
+conformance inputs outside the fork closure: the thing most likely to catch a
+protocol regression is also the thing that still works when the credential is
+missing.
 
 Adding the token makes the build run. It does not close G0: a token is how
 *this* organisation reaches its own forks, and the gate is that an

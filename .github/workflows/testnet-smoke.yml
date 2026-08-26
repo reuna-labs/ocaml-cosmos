@@ -1,0 +1,109 @@
+name: testnet-smoke
+
+# The scheduled live test. It signs with a real key and broadcasts, so it is
+# arranged to be a no-op unless someone has deliberately configured it:
+#
+#   - it never runs on push. Only on a schedule and by hand.
+#   - it does nothing at all unless COSMOS_TESTNET_KEY_HEX is set as a
+#     repository secret, and the job says so rather than failing.
+#   - examples/testnet_smoke.ml refuses any chain id it recognises as a
+#     mainnet, and has no defaults for anything.
+#
+# The key is a disposable testnet key with nothing on it beyond the faucet
+# tokens this test spends. It is not how the product signs -- the product's key
+# lives in an enclave and never leaves it -- and this exists to exercise the
+# client against a real chain, which no fixture can.
+
+on:
+  schedule:
+    # Weekly. Often enough to catch a chain upgrade that breaks the client,
+    # rarely enough not to drain a faucet account.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      broadcast:
+        description: "Actually broadcast, rather than stopping at the transcript"
+        type: boolean
+        default: false
+
+jobs:
+  smoke:
+    runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Is this configured?
+        id: configured
+        env:
+          KEY: ${{ secrets.COSMOS_TESTNET_KEY_HEX }}
+          RPC: ${{ secrets.COSMOS_TESTNET_RPC }}
+          TOKEN: ${{ secrets.REUNA_CI_TOKEN }}
+        run: |
+          missing=""
+          [ -n "$KEY" ]   || missing="$missing COSMOS_TESTNET_KEY_HEX"
+          [ -n "$RPC" ]   || missing="$missing COSMOS_TESTNET_RPC"
+          # The build needs the private forks, same as the test workflow.
+          [ -n "$TOKEN" ] || missing="$missing REUNA_CI_TOKEN"
+          if [ -n "$missing" ]; then
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Smoke skipped::Not configured. Missing:$missing"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Let git reach the private remotes
+        if: steps.configured.outputs.ok == 'true'
+        env:
+          TOKEN: ${{ secrets.REUNA_CI_TOKEN }}
+        run: |
+          git config --global \
+            url."https://x-access-token:${TOKEN}@github.com/".insteadOf \
+            "https://github.com/"
+
+      - uses: ocaml/setup-ocaml@v3
+        if: steps.configured.outputs.ok == 'true'
+        with:
+          ocaml-compiler: "5.2.1"
+          opam-local-packages: "*.opam"
+          opam-disable-sandboxing: true
+
+      - name: Pin the forks and siblings
+        if: steps.configured.outputs.ok == 'true'
+        run: |
+          M=git+https://github.com/reuna-labs/mirage-crypto.git#toolchain/ocaml-5.5
+          B=git+https://github.com/reuna-labs/ocaml-web3-codec.git#feat/multiformats
+          opam pin add -yn mirage-crypto.dev "$M"
+          opam pin add -yn mirage-crypto-rng.dev "$M"
+          opam pin add -yn mirage-crypto-ec.dev "$M"
+          opam pin add -yn digestif.dev \
+            git+https://github.com/reuna-labs/digestif.git#toolchain/ocaml-5.5
+          opam pin add -yn web3-codec-bech32.dev "$B"
+          opam pin add -yn web3-codec-protobuf.dev "$B"
+
+      - if: steps.configured.outputs.ok == 'true'
+        run: opam install -y --assume-depexts --deps-only .
+
+      - name: Sign and broadcast on a testnet
+        if: steps.configured.outputs.ok == 'true'
+        env:
+          COSMOS_RPC: ${{ secrets.COSMOS_TESTNET_RPC }}
+          COSMOS_CHAIN_ID: ${{ vars.COSMOS_TESTNET_CHAIN_ID }}
+          COSMOS_PREFIX: ${{ vars.COSMOS_TESTNET_PREFIX }}
+          COSMOS_DENOM: ${{ vars.COSMOS_TESTNET_DENOM }}
+          COSMOS_TO: ${{ vars.COSMOS_TESTNET_TO }}
+          COSMOS_AMOUNT: "1"
+          COSMOS_KEY_HEX: ${{ secrets.COSMOS_TESTNET_KEY_HEX }}
+          # A scheduled run broadcasts; a manual one only does if asked.
+          COSMOS_BROADCAST: ${{ github.event_name == 'schedule' && 'yes' || (inputs.broadcast && 'yes' || 'no') }}
+        run: opam exec -- dune exec examples/testnet_smoke.exe
+
+      # Evidence, which is the point of running this at all. The transcript
+      # names the chain, the payload digest and what was approved, so an
+      # archived run is a record of what the client actually did.
+      - name: Keep the transcript
+        if: steps.configured.outputs.ok == 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testnet-transcript
+          path: testnet-evidence/
+          if-no-files-found: ignore
