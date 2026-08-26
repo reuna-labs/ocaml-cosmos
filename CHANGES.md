@@ -168,6 +168,36 @@ Repository scaffold and the L0 specification pin.
   approved at this stage — their destinations or payloads are things no policy
   here has a trusted source for.
 
+### L3, in progress
+
+- **The typed client.** A method is a name, its parameters and a decoder,
+  bundled so a caller cannot pair one method's parameters with another's
+  result. Written against responses recorded from a real node rather than
+  against CometBFT's Go structs — the structs do not show that `int64` fields
+  are JSON strings while `uint32` fields are numbers, that absent fields are
+  `null` rather than omitted, or that the key is `proofOps` amid otherwise
+  snake_case names.
+- **Errors split three ways**, and the split that matters is between "the node
+  did not answer" and "the node answered and the answer is no". Only a
+  transport failure is retryable.
+- **The submission state machine.** Pure, so its awkward cases are reachable
+  directly. Its subtlety is that a rejected transaction may or may not have
+  consumed the sequence — `CheckTx` did not, delivery did — so it never
+  increments locally and goes back to ask instead. `sequence_consumed` reports
+  which happened. Bounded polling ends saying the fate is *unknown* rather
+  than claiming failure.
+- **HTTP/1.1 over any flow.** A pure incremental parser with every length
+  bounded, since the peer chooses all of them. The functor takes a minimal
+  four-function `FLOW` rather than `Mirage_flow.S`: its `write_error` is a
+  private row type that will not functor cleanly, and requiring `shutdown`,
+  `close` and `writev` would demand what this client never calls.
+- **`validation/flow/`** drives the whole client over two in-memory buffers —
+  no descriptor, no address, no stack. Content-length, byte-at-a-time,
+  chunked, and split reads all give the same answer; truncation, non-HTTP and
+  a 502 are all refused. `test/no_io_guard.sh` builds it.
+- **The Unix transport** is the same functor over `Mirage_flow_unix.Fd` and
+  nothing else, so the Unix path and the unikernel path are one implementation.
+
 ### Not done
 
-L3 onwards: the transports and the submission state machine.
+gRPC, and the live testnet evidence.

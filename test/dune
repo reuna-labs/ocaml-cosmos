@@ -15,7 +15,8 @@
   test_amino
   test_policy
   test_rpc
-  test_submission)
+  test_submission
+  test_http)
  (deps
   (glob_files ../conformance/fixtures/protoc/*.hex)
   (glob_files ../conformance/fixtures/amino/*.json)
@@ -26,6 +27,7 @@
   cosmos-crypto
   cosmos-tx
   cosmos-rpc
+  cosmos-rpc-flow
   web3-codec-bech32
   digestif
   mirage-crypto-ec

@@ -1,8 +1,12 @@
 ; Cardano's and Tron's arrangement: Cosmos_rpc_flow.Make applied to a Unix file
 ; descriptor and nothing else, so the Unix path and the unikernel path are the
 ; same implementation with a different flow underneath.
+;
+; unix is named explicitly. Since OCaml 5.0 it is no longer on the default
+; search path, and letting the auto-include alert find it means depending on a
+; deprecation.
 
 (library
  (name cosmos_rpc_unix)
  (public_name cosmos-rpc-unix)
- (libraries cosmos-rpc cosmos-rpc-flow lwt mirage-flow-unix uri))
+ (libraries cosmos-rpc cosmos-rpc-flow lwt lwt.unix unix mirage-flow-unix))

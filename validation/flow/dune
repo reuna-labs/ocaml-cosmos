@@ -1,0 +1,20 @@
+; The client, driven over a flow that is not a socket.
+;
+; This is the claim cosmos-rpc-flow makes, checked rather than asserted: if the
+; transport had smuggled in an assumption about sockets, DNS or a network
+; stack, it would not build here. It is also how the confirmation path gets
+; tested end to end without a node.
+;
+; test/no_io_guard.sh builds it.
+
+(executable
+ (name flow_link)
+ (libraries
+  cosmos-rpc
+  cosmos-rpc-flow
+  cosmos-types
+  lwt
+  lwt.unix
+  cstruct
+  mirage-flow
+  fmt))

@@ -145,10 +145,23 @@ else
   echo "no_io_guard: WARNING validation/solo5 is absent, link proof skipped" >&2
 fi
 
-# And the same question for gRPC, which claims to reach a vsock too: it must
-# build over a flow that is not a socket, naming no Unix package. The directory
-# does not exist yet; the check is here so that adding it turns the warning off
-# rather than needing this script edited.
+# And the same question for the transport, which claims to reach a vsock: it
+# must build and run over a flow that is not a socket, naming no Unix package.
+# A transport that had smuggled in an assumption about file descriptors, DNS or
+# a network stack would fail here rather than at deployment.
+if [ -f validation/flow/dune ]; then
+  echo "no_io_guard: driving the client over a non-socket flow"
+  if "$DUNE" build validation/flow/flow_link.exe 2>&1; then
+    echo "  ok  validation/flow/flow_link.exe"
+  else
+    fail "the client no longer works over an arbitrary flow"
+  fi
+else
+  echo "no_io_guard: WARNING validation/flow is absent, flow link proof skipped" >&2
+fi
+
+# The same, for gRPC. Not written yet; the check is here so that adding it
+# turns the warning off rather than needing this script edited.
 if [ -f validation/grpc-flow/dune ]; then
   echo "no_io_guard: linking gRPC over a non-socket flow"
   if "$DUNE" build validation/grpc-flow/grpc_flow_link.exe 2>&1; then

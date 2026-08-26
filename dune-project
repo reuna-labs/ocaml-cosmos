@@ -168,7 +168,6 @@
   (cosmos-crypto (= :version))
   (lwt (>= 5.6.0))
   (mirage-flow-unix (>= 4.0.0))
-  (uri (>= 4.2.0))
   (alcotest :with-test)))
 
 (package
