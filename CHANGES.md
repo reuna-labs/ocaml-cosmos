@@ -262,6 +262,31 @@ Repository scaffold and the L0 specification pin.
   `.mli` says plainly that this is half the anti-replay story and the other
   half is the enclave's.
 
+### L5, in progress
+
+- **CosmJS as a third oracle.** protoc says what the wire format is and the Go
+  SDK says what a node accepts; CosmJS says what a user's wallet will sign. It
+  agrees on all eight protobuf encodings and on the amino document. `check.py`
+  cross-checks the three against each other rather than committing a third set
+  of bytes.
+- **The conformance job runs in CI**, unguarded — none of it needs a private
+  dependency, which is the payoff for keeping the conformance inputs outside
+  the fork closure. protoc is hash-verified into a runner-temp prefix because
+  the runner has no passwordless sudo.
+- **Resilience tests** for the cases the gate names: restart, stale state,
+  timeout, malformed responses and finality.
+- **`Submission.resume`.** Exactly one thing is worth persisting across a
+  restart — the transaction hash. Everything else is re-derivable from the
+  chain and *safer* re-derived, since it may have moved while the process was
+  down. A signer that persisted its whole state would resume by re-broadcasting
+  bytes it can no longer justify; one that persisted nothing could not find out
+  whether a transaction it had already sent went through.
+- **Finality is not depth.** CometBFT has instant finality: a committed block
+  is committed, and waiting for confirmations answers a question this protocol
+  does not ask. What waiting buys is protection against a node that is lying or
+  behind — so `required_depth` is a statement about distrust of the node, has no
+  default, and zero is defensible against a node you run yourself.
+
 ### Not done
 
-The signing smoke against a testnet, and L5–L6.
+The signing smoke against a testnet, fuzzing, and L6.
