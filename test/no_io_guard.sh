@@ -32,7 +32,7 @@ DUNE="${DUNE:-dune}"
 
 # Everything a signature covers, plus the transport-free RPC layer. Deliberately
 # not the transports: those own a socket, which is their job.
-OFFLINE="cosmos-types cosmos-crypto cosmos-proto cosmos-tx cosmos-rpc cosmos"
+OFFLINE="cosmos-types cosmos-crypto cosmos-proto cosmos-tx cosmos-signer cosmos-rpc cosmos"
 
 # The transports that must still reach a Solo5 vsock. They are allowed Lwt and
 # a flow; they are not allowed anything that assumes a host operating system or

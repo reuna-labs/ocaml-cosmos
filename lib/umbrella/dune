@@ -5,4 +5,10 @@
 (library
  (name cosmos)
  (public_name cosmos)
- (libraries cosmos-types cosmos-crypto cosmos-proto cosmos-tx cosmos-rpc))
+ (libraries
+  cosmos-types
+  cosmos-crypto
+  cosmos-proto
+  cosmos-tx
+  cosmos-signer
+  cosmos-rpc))

@@ -77,6 +77,48 @@ let () =
   Printf.printf "verifies  %b\n"
     (Cosmos_tx.Tx.verify tx ~chain_id ~account_number:0L);
 
+  (* The signer transcript: reviewed, approved, and printed as a human would
+     see it. The whole L4 surface links with no transport. *)
+  let policy =
+    Cosmos_tx.Policy.strict
+    |> Cosmos_tx.Policy.allow_chain chain_id
+    |> Cosmos_tx.Policy.allow_transfer_to me
+    |> Cosmos_tx.Policy.allow_denom
+         (Result.get_ok (Cosmos_types.Denom.of_string "uatom"))
+    |> Cosmos_tx.Policy.max_fee
+         (Result.get_ok (Cosmos_types.Amount.of_string "5000"))
+         (Result.get_ok (Cosmos_types.Denom.of_string "uatom"))
+  in
+  let doc =
+    Cosmos_tx.Sign_doc.make ~body ~auth_info ~chain_id ~account_number:0L
+  in
+  let request =
+    Result.get_ok
+      (Cosmos_signer.Transcript.request ~chain_id ~account_number:0L
+         ~sequence:0L ~sign_mode:Cosmos_signer.Transcript.Direct
+         ~payload:(Cosmos_tx.Sign_doc.to_bytes doc)
+         ~nonce:(String.make 16 '\x2a') ~not_after:1_800_000_000L)
+  in
+  (match Cosmos_signer.Transcript.review ~base:"cosmos" ~policy request with
+  | Error reasons ->
+      List.iter (fun r -> print_endline ("refused   " ^ r)) reasons
+  | Ok review -> (
+      match
+        Cosmos_signer.Transcript.sign review ~key
+          ~measurement:"solo5:validation"
+      with
+      | Error e -> print_endline ("sign      " ^ e)
+      | Ok approval ->
+          let verified =
+            Cosmos_signer.Transcript.verify approval
+              ~key:(Cosmos_crypto.public_key_of_private key)
+              ~now:1_700_000_000L
+          in
+          Printf.printf "approved  %b\n" (Result.is_ok verified);
+          print_newline ();
+          print_endline
+            (Format.asprintf "%a" Cosmos_signer.Transcript.pp approval)));
+
   (* A message this library cannot read is unapprovable, and says so. *)
   let unknown =
     Cosmos_tx.Msg.of_any ~base:"cosmos" ~type_url:"/an.app.chain.v1.MsgWhoKnows"

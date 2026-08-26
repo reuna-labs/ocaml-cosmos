@@ -8,4 +8,5 @@ module Types = Cosmos_types
 module Crypto = Cosmos_crypto
 module Proto = Cosmos_proto
 module Tx = Cosmos_tx
+module Signer = Cosmos_signer
 module Rpc = Cosmos_rpc

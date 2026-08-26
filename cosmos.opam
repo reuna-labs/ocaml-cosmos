@@ -19,6 +19,7 @@ depends: [
   "cosmos-crypto" {= version}
   "cosmos-proto" {= version}
   "cosmos-tx" {= version}
+  "cosmos-signer" {= version}
   "cosmos-rpc" {= version}
   "alcotest" {with-test}
   "qcheck-core" {with-test}

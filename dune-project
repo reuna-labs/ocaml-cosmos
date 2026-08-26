@@ -98,6 +98,22 @@
   (qcheck-alcotest :with-test)))
 
 (package
+ (name cosmos-signer)
+ (synopsis "The signer transcript: what was asked, shown and approved")
+ (description
+  "Binds the bytes a signature will cover to the meaning a human was shown and\nto the policy that approved it, under one versioned envelope.\n\nThe binding is structural rather than procedural. The intent is derived from\nthe payload bytes and the rendering is derived from the intent, so a signer\nthat displayed one transaction and signed another is not something this API\ncan express -- and an approval cannot be constructed without a review, nor a\nreview without the policy having passed.\n\nNo clock: freshness is checked against a time the caller supplies. A signer\nable to read a clock could be walked into extending its own validity window.")
+ (depends
+  (ocaml (>= 4.14))
+  (dune (>= 3.6))
+  (cosmos-types (= :version))
+  (cosmos-tx (= :version))
+  (cosmos-crypto (= :version))
+  (digestif (>= 1.2.0))
+  (alcotest :with-test)
+  (qcheck-core :with-test)
+  (qcheck-alcotest :with-test)))
+
+(package
  (name cosmos-rpc)
  (synopsis "Typed transport-independent CometBFT and Cosmos gRPC client")
  (description
@@ -182,6 +198,7 @@
   (cosmos-crypto (= :version))
   (cosmos-proto (= :version))
   (cosmos-tx (= :version))
+  (cosmos-signer (= :version))
   (cosmos-rpc (= :version))
   (alcotest :with-test)
   (qcheck-core :with-test)

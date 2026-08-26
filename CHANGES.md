@@ -229,6 +229,39 @@ Repository scaffold and the L0 specification pin.
   buffers. `test/no_io_guard.sh` now builds both flow proofs and runs with no
   warnings.
 
+### L4
+
+- **The signer transcript**, `cosmos-signer`. Binds the bytes a signature will
+  cover to the meaning a human was shown and to the policy that approved it,
+  under one versioned envelope — chain, account, sequence, payload digest,
+  intent, rendering, freshness fields and the measurement of the code that
+  approved.
+
+  The binding is structural, not procedural. The intent is derived from the
+  payload bytes; the rendering from the intent; and an approval cannot be
+  constructed except from a review, nor a review except by the policy passing.
+  "Displayed X, signed Y" is not a mistake this API can express, and "approved
+  without review" is not a value that exists.
+
+  `verify` re-derives the rendering rather than trusting the one stored, so a
+  transcript whose words were altered afterwards fails. That is what makes it
+  evidence rather than a log line.
+- **Both sign modes, one reviewed payload.** The request carries a `SignDoc` in
+  both. In amino mode the signer *derives* the document it signs from that same
+  payload rather than accepting amino bytes from the caller — taking them would
+  reinstate the exact substitution the module prevents, through the front door.
+  The transcript binds both digests, and the record says when they differ.
+- **The canonical encoding is length-prefixed binary**, not JSON: a digest that
+  two implementations must agree on exactly should not be computed over a
+  format with a dozen ways to write the same document. Every field is
+  length-prefixed, so no two splits of the same concatenated bytes collide —
+  the property a delimiter scheme lacks.
+- **No clock.** Freshness is checked against a time the caller supplies. The
+  nonce is bound into the digest so a replayed request is *detectable*;
+  detecting it needs a record of nonces already used, which is state, and the
+  `.mli` says plainly that this is half the anti-replay story and the other
+  half is the enclave's.
+
 ### Not done
 
-The signing smoke against a testnet, and L4 onwards.
+The signing smoke against a testnet, and L5–L6.

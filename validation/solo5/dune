@@ -20,4 +20,5 @@
   cosmos-crypto
   cosmos-proto
   cosmos-tx
+  cosmos-signer
   cosmos-rpc))

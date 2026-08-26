@@ -16,7 +16,8 @@
   test_policy
   test_rpc
   test_submission
-  test_http)
+  test_http
+  test_transcript)
  (deps
   (glob_files ../conformance/fixtures/protoc/*.hex)
   (glob_files ../conformance/fixtures/amino/*.json)
@@ -26,6 +27,7 @@
   cosmos-types
   cosmos-crypto
   cosmos-tx
+  cosmos-signer
   cosmos-rpc
   cosmos-rpc-flow
   cosmos-rpc-grpc

@@ -33,6 +33,16 @@ val make :
   account_number:int64 ->
   t
 
+val of_bytes : string -> (t, string) result
+(** Decodes a serialized [SignDoc] — what a signer is handed when it did not
+    build the transaction itself.
+
+    The two byte strings are kept exactly as they arrived. Nothing here
+    re-encodes them, and {!to_bytes} is deliberately {i not} guaranteed to
+    reproduce the input: a payload carrying a non-canonical protobuf encoding
+    decodes to the same meaning and would re-encode to different bytes. The
+    meaning is what gets reviewed; the original bytes are what gets signed. *)
+
 val body_bytes : t -> string
 val auth_info_bytes : t -> string
 val chain_id : t -> Cosmos_types.Chain_id.t

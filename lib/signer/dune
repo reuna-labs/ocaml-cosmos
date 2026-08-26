@@ -1,0 +1,11 @@
+; The signer transcript: what was asked, what was shown, and what was approved,
+; bound together so the three cannot disagree.
+;
+; Offline, like everything a signature covers. No clock -- freshness is checked
+; against a time the caller supplies, because a signer that could read a clock
+; could be walked into extending its own window.
+
+(library
+ (name cosmos_signer)
+ (public_name cosmos-signer)
+ (libraries cosmos-types cosmos-tx cosmos-crypto digestif))

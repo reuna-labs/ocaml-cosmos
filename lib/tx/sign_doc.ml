@@ -17,6 +17,21 @@ let make ~body ~auth_info ~chain_id ~account_number =
     account_number;
   }
 
+let of_bytes source =
+  match Wire.decode (module Pb.SignDoc) source with
+  | Error _ as e -> e
+  | Ok (pb : Pb.SignDoc.t) -> (
+      match Chain_id.of_string pb.chain_id with
+      | Error e -> Error ("sign_doc: " ^ e)
+      | Ok chain_id ->
+          Ok
+            {
+              body_bytes = Bytes.to_string pb.body_bytes;
+              auth_info_bytes = Bytes.to_string pb.auth_info_bytes;
+              chain_id;
+              account_number = pb.account_number;
+            })
+
 let body_bytes t = t.body_bytes
 let auth_info_bytes t = t.auth_info_bytes
 let chain_id t = t.chain_id
