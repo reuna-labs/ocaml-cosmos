@@ -175,11 +175,16 @@ let requests_are_well_formed () =
   let r = Rpc.Codec.request ~id:1 Rpc.Method.status in
   Alcotest.(check string)
     "status" {|{"jsonrpc":"2.0","id":1,"method":"status","params":{}}|} r;
-  (* An ABCI query sends its data as 0x-prefixed hex ... *)
+  (* An ABCI query sends its data as bare hex, with no 0x prefix.
+
+     CometBFT's URI parser accepts a 0x prefix and its JSON-RPC parser does
+     not, and this client only ever speaks JSON-RPC. Sending "0x..." gets
+     "encoding/hex: invalid byte: U+0078 'x'" back -- which a fixture recorded
+     over GET cannot show, and a live query did. *)
   let q = Rpc.Method.abci_query ~path:"/x.Y/Z" ~data:"\x01\xff" in
   Alcotest.(check string)
     "abci_query"
-    {|{"jsonrpc":"2.0","id":2,"method":"abci_query","params":{"path":"/x.Y/Z","data":"0x01ff"}}|}
+    {|{"jsonrpc":"2.0","id":2,"method":"abci_query","params":{"path":"/x.Y/Z","data":"01ff"}}|}
     (Rpc.Codec.request ~id:2 q);
   (* ... and a broadcast sends its transaction as base64. The two are not
      interchangeable and a node accepts neither in the other's place. *)

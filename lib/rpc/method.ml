@@ -12,13 +12,22 @@ let params t = t.params
 let decode t = t.decode
 let ( let* ) = Result.bind
 
-(* CometBFT takes ABCI query data as a 0x-prefixed hex string. *)
+(* ABCI query data is hex, and CometBFT has two parsers for it.
+   
+   The URI form -- GET /abci_query?data=0x... -- accepts a 0x prefix. The
+   JSON-RPC form, which is the only one this client uses, unmarshals the
+   parameter as bytes.HexBytes, and that rejects the prefix outright:
+   
+     "error converting json params to arguments: encoding/hex: invalid byte:
+      U+0078 'x'"
+   
+   So: bare hex. This cost a live query to find, because both forms are hex and
+   the difference does not appear in any response recorded over GET. *)
 let hex s =
-  "0x"
-  ^ String.concat ""
-      (List.map
-         (fun c -> Printf.sprintf "%02x" (Char.code c))
-         (List.init (String.length s) (String.get s)))
+  String.concat ""
+    (List.map
+       (fun c -> Printf.sprintf "%02x" (Char.code c))
+       (List.init (String.length s) (String.get s)))
 
 let upper_hex s =
   String.concat ""

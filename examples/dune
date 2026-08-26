@@ -1,0 +1,11 @@
+; The guarded live executables. They ship in cosmos-rpc-unix because they are
+; the only things here that touch a network, and dune-project says so.
+;
+; Neither runs as part of `dune runtest`: ordinary tests are hermetic.
+
+(executable
+ (name query)
+ (modules query)
+ (public_name cosmos-query)
+ (package cosmos-rpc-unix)
+ (libraries cosmos-rpc cosmos-rpc-unix cosmos-types lwt lwt.unix))

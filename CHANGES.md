@@ -198,6 +198,19 @@ Repository scaffold and the L0 specification pin.
 - **The Unix transport** is the same functor over `Mirage_flow_unix.Fd` and
   nothing else, so the Unix path and the unikernel path are one implementation.
 
+- **A read-only live query**, `examples/query.exe`. Everything it does is a
+  query — nothing signed, nothing broadcast — which is what makes it safe to
+  point at mainnet, and it is the only thing that exercises the Unix transport
+  against a node rather than a fixture. It found a real bug on its first run:
+  CometBFT's URI parameter parser accepts a `0x` hex prefix and its JSON-RPC
+  parser rejects it, and this client only speaks JSON-RPC. The recorded
+  fixtures were made over GET and so could never have shown it; `record.sh`
+  now asks the way the client asks.
+
+  It also exposes the `Host` header, because anything in front of a node
+  routes on it and answers 403 to a request whose `Host` is the address it was
+  dialled at.
+
 ### Not done
 
-gRPC, and the live testnet evidence.
+gRPC, and the signing smoke against a testnet.

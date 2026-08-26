@@ -56,9 +56,16 @@ silent — the code still builds, the duniverse just stops locking — so
 `test/no_io_guard.sh` checks it alongside the I/O rule.
 
 **Both flow transports must reach a vsock.** `cosmos-rpc-flow` and
-`cosmos-rpc-grpc` are functorised over `Mirage_flow.S` and may not depend on
-anything that assumes a host operating system or a TCP stack.
-`cosmos-rpc-unix` is the deliberate exception.
+`cosmos-rpc-grpc` are functorised over a flow and may not depend on anything
+that assumes a host operating system or a TCP stack. `cosmos-rpc-unix` is the
+deliberate exception.
+
+The signature they take is a minimal four-function `FLOW`, not `Mirage_flow.S`.
+Its `write_error` is a private row type that will not functor cleanly onto a
+concrete flow, and requiring `shutdown`, `close` and `writev` would demand what
+these clients never call — and rule out a flow made of two in-memory buffers,
+which is what `validation/flow/` uses to prove the claim. Every
+`Mirage_flow.S` satisfies the smaller signature structurally.
 
 Network tests are opt-in; ordinary `dune runtest` is hermetic.
 
@@ -93,7 +100,7 @@ Generated sources are committed, so an ordinary build never touches it.
 
 ## Where this repo sits
 
-`~/reuna/web3/ocaml-cardano` — the `web3/` group (OCaml/Mirage web3 protocol libraries).
+`~/reuna/web3/ocaml-cosmos` — the `web3/` group (OCaml/Mirage web3 protocol libraries).
 
 The tree was reorganised into effort groups; peer repositories are **no longer siblings**
 at `../`. The full layout:
