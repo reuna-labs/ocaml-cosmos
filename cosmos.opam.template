@@ -18,6 +18,9 @@ pin-depends: [
   [ "mirage-crypto.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#toolchain/ocaml-5.5" ]
   [ "mirage-crypto-rng.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#toolchain/ocaml-5.5" ]
   [ "mirage-crypto-ec.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#toolchain/ocaml-5.5" ]
+  # The Unix TLS package brings mirage-crypto-pk into the development solve;
+  # every package in that family must come from one identically-versioned tree.
+  [ "mirage-crypto-pk.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#toolchain/ocaml-5.5" ]
   [ "digestif.dev" "git+https://github.com/reuna-labs/digestif.git#toolchain/ocaml-5.5" ]
   # Both are on feat/multiformats, not on the default branch. A pin without
   # the branch resolves to main, which has neither package.

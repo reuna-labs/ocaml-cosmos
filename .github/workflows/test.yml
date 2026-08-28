@@ -150,6 +150,9 @@ jobs:
           opam pin add -yn mirage-crypto.dev "$M"
           opam pin add -yn mirage-crypto-rng.dev "$M"
           opam pin add -yn mirage-crypto-ec.dev "$M"
+          # tls depends on mirage-crypto-pk. It must have the same version as
+          # the forked mirage-crypto packages rather than opam's release.
+          opam pin add -yn mirage-crypto-pk.dev "$M"
           opam pin add -yn digestif.dev \
             git+https://github.com/reuna-labs/digestif.git#toolchain/ocaml-5.5
 

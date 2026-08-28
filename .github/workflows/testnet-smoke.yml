@@ -75,6 +75,7 @@ jobs:
           opam pin add -yn mirage-crypto.dev "$M"
           opam pin add -yn mirage-crypto-rng.dev "$M"
           opam pin add -yn mirage-crypto-ec.dev "$M"
+          opam pin add -yn mirage-crypto-pk.dev "$M"
           opam pin add -yn digestif.dev \
             git+https://github.com/reuna-labs/digestif.git#toolchain/ocaml-5.5
           opam pin add -yn web3-codec-bech32.dev "$B"
