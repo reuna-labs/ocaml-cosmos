@@ -9,4 +9,18 @@
 (library
  (name cosmos_rpc_unix)
  (public_name cosmos-rpc-unix)
- (libraries cosmos-rpc cosmos-rpc-flow lwt lwt.unix unix mirage-flow-unix))
+ (libraries
+  cosmos-rpc
+  cosmos-rpc-flow
+  lwt
+  lwt.unix
+  unix
+  mirage-flow
+  mirage-flow-unix
+  tls
+  tls-lwt
+  x509
+  ca-certs
+  uri
+  cstruct
+  fmt))

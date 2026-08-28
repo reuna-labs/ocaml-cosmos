@@ -4,9 +4,9 @@
 ; Neither runs as part of `dune runtest`: ordinary tests are hermetic.
 
 (executables
- (names query testnet_smoke)
- (modules query testnet_smoke)
- (public_names cosmos-query cosmos-testnet-smoke)
+ (names address_of_key query testnet_smoke)
+ (modules address_of_key query testnet_smoke)
+ (public_names cosmos-address-of-key cosmos-query cosmos-testnet-smoke)
  (package cosmos-rpc-unix)
  (libraries
   cosmos-rpc

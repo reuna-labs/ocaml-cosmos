@@ -1,20 +1,33 @@
-(** The CometBFT JSON-RPC client over a Unix socket.
+(** The CometBFT JSON-RPC client over Unix TCP, Unix-domain sockets, or
+    certificate-verified TLS.
 
-    This is {!Cosmos_rpc_flow.Make} instantiated over [Mirage_flow_unix.Fd] and
-    nothing more. The interesting property is what is {e absent}: there is no
-    Unix-specific client code, so the Unix path and the unikernel path are the
-    same implementation with a different flow underneath. If they were two
-    implementations, only one of them would be the tested one.
+    The HTTP implementation remains {!Cosmos_rpc_flow.Make}; this package only
+    dials the host transport and, for HTTPS, wraps it in [tls-lwt]. The default
+    HTTPS path uses the operating system trust store through [ca-certs], sends
+    SNI, and verifies the provider hostname. A caller can supply a narrower
+    {!X509.Authenticator.t} when it pins a private provider or deployment CA.
 
-    Dialling is the exception, and it lives here rather than one layer up on
-    purpose: a unikernel's connection comes from a device it owns, and putting a
-    [getaddrinfo] into [cosmos-rpc-flow] would be a Unix dependency in the one
-    layer that must not have one.
+    TLS is intentionally isolated here. The signed-data, RPC, flow and gRPC
+    packages retain their Unix-free and GMP-free closures and still compose with
+    [Tls_mirage.Make] when a Mirage deployment supplies its own trust anchors.
+*)
 
-    TLS is not wired here. It composes as [Tls_mirage.Make] over the same flow
-    signature, and doing it properly means deciding where the trust anchors come
-    from — a deployment question, and supplying a default would be answering it
-    wrongly. *)
+module Endpoint : sig
+  type scheme = [ `Http | `Https ]
+  type t
+
+  val of_string : string -> (t, string) result
+  (** Parses [http://] and [https://] endpoints, including an optional port,
+      path and query. For compatibility, a value without a scheme is plain HTTP
+      on CometBFT's conventional port 26657. User information and fragments are
+      rejected. *)
+
+  val scheme : t -> scheme
+  val host : t -> string
+  val port : t -> int
+  val path : t -> string
+  val host_header : t -> string
+end
 
 type t
 
@@ -24,6 +37,7 @@ val create :
   host:string ->
   Lwt_unix.file_descr ->
   t
+(** Creates a client over an already connected plain Unix file descriptor. *)
 
 val call : t -> string -> (string, Cosmos_rpc.Error.t) result Lwt.t
 
@@ -31,6 +45,25 @@ val request :
   t -> 'a Cosmos_rpc.Method.t -> ('a, Cosmos_rpc.Error.t) result Lwt.t
 
 (** {2 Dialling} *)
+
+val connect_uri :
+  ?limits:Cosmos_rpc_flow.Http.limits ->
+  ?authenticator:X509.Authenticator.t ->
+  ?host_header:string ->
+  string ->
+  (t, Cosmos_rpc.Error.t) result Lwt.t
+(** Dials an HTTP or HTTPS URI. HTTPS uses the system trust store unless
+    [authenticator] is supplied. The TLS peer name always comes from the URI;
+    [host_header] only overrides HTTP routing, for example behind a proxy. *)
+
+val connect_tls :
+  ?limits:Cosmos_rpc_flow.Http.limits ->
+  ?authenticator:X509.Authenticator.t ->
+  ?host_header:string ->
+  ?path:string ->
+  string ->
+  int ->
+  (t, Cosmos_rpc.Error.t) result Lwt.t
 
 val connect_tcp :
   ?limits:Cosmos_rpc_flow.Http.limits ->

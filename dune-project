@@ -183,7 +183,15 @@
   (cosmos-tx (= :version))
   (cosmos-crypto (= :version))
   (lwt (>= 5.6.0))
+  (mirage-flow (>= 4.0.0))
   (mirage-flow-unix (>= 4.0.0))
+  (tls (>= 2.0.0))
+  (tls-lwt (>= 2.0.0))
+  x509
+  ca-certs
+  uri
+  cstruct
+  fmt
   (alcotest :with-test)))
 
 (package

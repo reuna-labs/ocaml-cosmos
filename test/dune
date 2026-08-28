@@ -18,7 +18,8 @@
   test_submission
   test_http
   test_transcript
-  test_resilience)
+  test_resilience
+  test_endpoint)
  (deps
   (glob_files ../conformance/fixtures/protoc/*.hex)
   (glob_files ../conformance/fixtures/amino/*.json)
@@ -32,10 +33,12 @@
   cosmos-rpc
   cosmos-rpc-flow
   cosmos-rpc-grpc
+  cosmos-rpc-unix
   web3-codec-bech32
   digestif
   yojson
   mirage-crypto-ec
+  fmt
   alcotest
   qcheck-core
   qcheck-alcotest))

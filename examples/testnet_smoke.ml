@@ -18,7 +18,7 @@
    client, not to demonstrate key handling.
    
    usage:
-     COSMOS_RPC=http://127.0.0.1:26657 \
+     COSMOS_RPC=https://rpc.provider-sentry-01.hub-testnet.polypore.xyz \
      COSMOS_CHAIN_ID=provider \
      COSMOS_PREFIX=cosmos \
      COSMOS_DENOM=uatom \
@@ -70,28 +70,6 @@ let unhex h =
              Char.chr (int_of_string ("0x" ^ String.sub h (2 * i) 2))))
     with _ -> Error "not hex"
 
-let split_endpoint url =
-  let strip p s =
-    let n = String.length p in
-    if String.length s >= n && String.sub s 0 n = p then
-      Some (String.sub s n (String.length s - n))
-    else None
-  in
-  match strip "https://" url with
-  | Some _ ->
-      Error (url ^ ": this smoke speaks plain HTTP; see examples/query.ml")
-  | None -> (
-      let rest = match strip "http://" url with Some r -> r | None -> url in
-      match String.index_opt rest ':' with
-      | Some i -> (
-          match
-            int_of_string_opt
-              (String.sub rest (i + 1) (String.length rest - i - 1))
-          with
-          | Some p -> Ok (String.sub rest 0 i, p)
-          | None -> Error ("not a port in " ^ url))
-      | None -> Ok (rest, 26657))
-
 let die msg =
   prerr_endline msg;
   exit 2
@@ -114,8 +92,6 @@ let main () =
           testnet."
          chain_id_s);
 
-  let& host_port = split_endpoint endpoint in
-  let host, port = host_port in
   let& chain_id = Cosmos_types.Chain_id.of_string chain_id_s in
   let& denom = Cosmos_types.Denom.of_string denom_s in
   let& key_bytes = unhex key_hex in
@@ -129,9 +105,9 @@ let main () =
     Cosmos_types.Address.of_bytes prefix (Cosmos_crypto.address_bytes pk)
   in
   Printf.printf "signer   %s\n" (Cosmos_types.Address.to_bech32 me);
-  Printf.printf "chain    %s at %s:%d\n\n" chain_id_s host port;
+  Printf.printf "chain    %s at %s\n\n" chain_id_s endpoint;
 
-  let* client = Cosmos_rpc_unix.connect_tcp ~host_header:host host port in
+  let* client = Cosmos_rpc_unix.connect_uri endpoint in
   let& client =
     match client with
     | Ok c -> Ok c
