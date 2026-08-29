@@ -195,6 +195,11 @@ jobs:
       - if: steps.creds.outputs.ok == 'true'
         run: opam install -y --assume-depexts --deps-only --with-test .
 
+      # Formatting is a repository check rather than a package dependency, so
+      # --deps-only does not install it. Keep this aligned with .ocamlformat.
+      - if: steps.creds.outputs.ok == 'true'
+        run: opam install -y ocamlformat.0.29.0
+
       - if: steps.creds.outputs.ok == 'true'
         run: opam exec -- dune build @install
 
