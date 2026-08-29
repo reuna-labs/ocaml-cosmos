@@ -67,7 +67,7 @@
 
 (package
  (name cosmos-crypto)
- (synopsis "secp256k1 signing and address derivation for Cosmos SDK chains")
+ (synopsis "Secp256k1 signing and address derivation for Cosmos SDK chains")
  (description
   "Signs the 32-byte SHA-256 digest of a serialized SignDoc and produces the\n64-byte r||s the SDK expects -- no recovery byte, because the public key\ntravels in SignerInfo.\n\nSignatures are normalised to low-S. The SDK rejects high-S as malleable and\nmirage-crypto-ec does not normalise, so this is a correctness requirement\nrather than a preference.\n\nCurve operations use mirage-crypto-ec's fiat-crypto P256k1 backend and are\nconstant time. Address derivation is RIPEMD-160 over SHA-256 of the\ncompressed public key, both from digestif. Ed25519 is verify-only: it is a\nvalidator key type, not an account signing path this library offers.\n\nNo RNG: nonces are RFC 6979 deterministic.")
  (depends
