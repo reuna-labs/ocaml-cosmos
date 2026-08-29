@@ -221,8 +221,16 @@ let main () =
                 with
                 | Error e -> die e
                 | Ok approval ->
-                    print_endline
-                      (Format.asprintf "%a" Cosmos_signer.Transcript.pp approval);
+                    let transcript =
+                      Format.asprintf "%a" Cosmos_signer.Transcript.pp approval
+                    in
+                    print_endline transcript;
+                    let evidence = open_out_bin "testnet-transcript.txt" in
+                    Fun.protect
+                      ~finally:(fun () -> close_out evidence)
+                      (fun () ->
+                        output_string evidence transcript;
+                        output_char evidence '\n');
                     if Sys.getenv_opt "COSMOS_BROADCAST" <> Some "yes" then (
                       print_endline
                         "\n\

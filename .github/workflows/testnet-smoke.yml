@@ -132,5 +132,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: testnet-transcript
-          path: testnet-evidence/
+          path: testnet-transcript.txt
           if-no-files-found: ignore
