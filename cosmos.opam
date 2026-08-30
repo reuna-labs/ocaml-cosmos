@@ -59,19 +59,19 @@ dev-repo: "git+https://github.com/reuna-labs/ocaml-cosmos.git"
 # and leaving it out is what keeps zarith and GMP out of this closure.
 
 pin-depends: [
-  [ "mirage-crypto.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#release/web3-2.4.0-reuna1" ]
-  [ "mirage-crypto-rng.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#release/web3-2.4.0-reuna1" ]
-  [ "mirage-crypto-ec.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#release/web3-2.4.0-reuna1" ]
+  [ "mirage-crypto.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#v2.4.0-reuna1" ]
+  [ "mirage-crypto-rng.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#v2.4.0-reuna1" ]
+  [ "mirage-crypto-ec.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#v2.4.0-reuna1" ]
   # The Unix TLS package brings mirage-crypto-pk into the development solve;
   # every package in that family must come from one identically-versioned tree.
-  [ "mirage-crypto-pk.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#release/web3-2.4.0-reuna1" ]
-  [ "digestif.dev" "git+https://github.com/reuna-labs/digestif.git#release/1.4.0-alpha1" ]
+  [ "mirage-crypto-pk.dev" "git+https://github.com/reuna-labs/mirage-crypto.git#v2.4.0-reuna1" ]
+  [ "digestif.1.4.0" "git+https://github.com/reuna-labs/digestif.git#v1.4.0-alpha1" ]
   # The lean codec packages have been merged to the release branch.
-  [ "web3-codec-bech32.dev" "git+https://github.com/reuna-labs/ocaml-web3-codec.git#main" ]
-  [ "web3-codec-protobuf.dev" "git+https://github.com/reuna-labs/ocaml-web3-codec.git#main" ]
+  [ "web3-codec-bech32.0.1.0~alpha1" "git+https://github.com/reuna-labs/ocaml-web3-codec.git#v0.1.0-alpha1" ]
+  [ "web3-codec-protobuf.0.1.0~alpha1" "git+https://github.com/reuna-labs/ocaml-web3-codec.git#v0.1.0-alpha1" ]
   # grpc.0.2.0 caps h2 < 0.13.0, and the Mirage-capable h2 is 0.13.0. The fix
   # is staged in the private Reuna mirror pending an upstream release. Only
   # cosmos-rpc-grpc needs it.
-  [ "grpc.dev" "git+https://github.com/reuna-labs/ocaml-grpc.git#main" ]
-  [ "grpc-lwt.dev" "git+https://github.com/reuna-labs/ocaml-grpc.git#main" ]
+  [ "grpc.0.2.1~alpha1" "git+https://github.com/reuna-labs/ocaml-grpc.git#v0.2.1-alpha1" ]
+  [ "grpc-lwt.0.2.1~alpha1" "git+https://github.com/reuna-labs/ocaml-grpc.git#v0.2.1-alpha1" ]
 ]

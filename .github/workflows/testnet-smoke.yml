@@ -96,14 +96,14 @@ jobs:
       - name: Pin the forks and siblings
         if: steps.configured.outputs.ok == 'true'
         run: |
-          M=git+https://github.com/reuna-labs/mirage-crypto.git#release/web3-2.4.0-reuna1
-          B=git+https://github.com/reuna-labs/ocaml-web3-codec.git#main
+          M=git+https://github.com/reuna-labs/mirage-crypto.git#v2.4.0-reuna1
+          B=git+https://github.com/reuna-labs/ocaml-web3-codec.git#v0.1.0-alpha1
           opam pin add -yn mirage-crypto.dev "$M"
           opam pin add -yn mirage-crypto-rng.dev "$M"
           opam pin add -yn mirage-crypto-ec.dev "$M"
           opam pin add -yn mirage-crypto-pk.dev "$M"
           opam pin add -yn digestif.dev \
-            git+https://github.com/reuna-labs/digestif.git#release/1.4.0-alpha1
+            git+https://github.com/reuna-labs/digestif.git#v1.4.0-alpha1
           opam pin add -yn web3-codec-bech32.dev "$B"
           opam pin add -yn web3-codec-protobuf.dev "$B"
 

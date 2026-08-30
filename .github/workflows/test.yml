@@ -171,7 +171,7 @@ jobs:
       - name: Pin the crypto forks
         if: steps.creds.outputs.ok == 'true'
         run: |
-          M=git+https://github.com/reuna-labs/mirage-crypto.git#release/web3-2.4.0-reuna1
+          M=git+https://github.com/reuna-labs/mirage-crypto.git#v2.4.0-reuna1
           opam pin add -yn mirage-crypto.dev "$M"
           opam pin add -yn mirage-crypto-rng.dev "$M"
           opam pin add -yn mirage-crypto-ec.dev "$M"
@@ -179,14 +179,14 @@ jobs:
           # the forked mirage-crypto packages rather than opam's release.
           opam pin add -yn mirage-crypto-pk.dev "$M"
           opam pin add -yn digestif.dev \
-            git+https://github.com/reuna-labs/digestif.git#release/1.4.0-alpha1
+            git+https://github.com/reuna-labs/digestif.git#v1.4.0-alpha1
 
       # The lean codec packages are now on main; keeping the branch explicit
       # makes this private staging dependency reproducible until it is tagged.
       - name: Pin the sibling packages
         if: steps.creds.outputs.ok == 'true'
         run: |
-          B=git+https://github.com/reuna-labs/ocaml-web3-codec.git#main
+          B=git+https://github.com/reuna-labs/ocaml-web3-codec.git#v0.1.0-alpha1
           opam pin add -yn web3-codec-bech32.dev "$B"
           opam pin add -yn web3-codec-protobuf.dev "$B"
 
