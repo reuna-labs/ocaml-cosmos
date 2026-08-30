@@ -28,7 +28,7 @@ on:
 
 jobs:
   smoke:
-    runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -37,28 +37,16 @@ jobs:
         env:
           KEY: ${{ secrets.COSMOS_TESTNET_KEY_HEX }}
           RPC: ${{ secrets.COSMOS_TESTNET_RPC }}
-          TOKEN: ${{ secrets.REUNA_CI_TOKEN }}
         run: |
           missing=""
           [ -n "$KEY" ]   || missing="$missing COSMOS_TESTNET_KEY_HEX"
           [ -n "$RPC" ]   || missing="$missing COSMOS_TESTNET_RPC"
-          # The build needs the private forks, same as the test workflow.
-          [ -n "$TOKEN" ] || missing="$missing REUNA_CI_TOKEN"
           if [ -n "$missing" ]; then
             echo "ok=false" >> "$GITHUB_OUTPUT"
             echo "::notice title=Smoke skipped::Not configured. Missing:$missing"
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Let git reach the private remotes
-        if: steps.configured.outputs.ok == 'true'
-        env:
-          TOKEN: ${{ secrets.REUNA_CI_TOKEN }}
-        run: |
-          git config --global \
-            url."https://x-access-token:${TOKEN}@github.com/".insteadOf \
-            "https://github.com/"
 
       - uses: ocaml/setup-ocaml@v3
         if: steps.configured.outputs.ok == 'true'

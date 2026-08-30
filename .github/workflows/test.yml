@@ -9,11 +9,10 @@ jobs:
   # The oracles first: if the fixtures have drifted, everything downstream is
   # being checked against the wrong answer.
   #
-  # None of these needs a private dependency, so unlike `build` they run
-  # whether or not REUNA_CI_TOKEN is set. That is the point of keeping the
-  # conformance inputs free of the fork closure.
+  # None of these needs the tagged dependency wave. Keeping the conformance
+  # inputs free of that closure makes fixture drift easy to diagnose.
   conformance:
-    runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +70,7 @@ jobs:
         run: git diff --exit-code conformance/fixtures/
 
   build:
-    runs-on: [self-hosted, Linux, X64, reuna-builder-x86]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -79,49 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Six of this repository's dependencies live in private reuna-labs
-      # repositories -- the mirage-crypto fork for P256k1, the digestif fork,
-      # and the two web3-codec packages -- and the runner has no git credential
-      # for github.com by default. Without one, `opam pin` fails with
-      #
-      #   fatal: could not read Username for 'https://github.com'
-      #
-      # This check is FIRST, before setup-ocaml, on purpose: a run that cannot
-      # succeed should cost five seconds rather than the thirty-five minutes
-      # setup-ocaml spends building a compiler before reaching the pin step.
-      #
-      # To turn the build on, add a token with read access to reuna-labs as the
-      # repository secret REUNA_CI_TOKEN. Nothing else changes.
-      #
-      # That the credential is needed at all is the G0 launch gate -- "no opam
-      # file points to a private repository" -- and it is not closed. See
-      # docs/release.md.
-      #
-      # The conformance job deliberately needs none of this, so the oracles are
-      # checked on every push whether or not the build can run.
-      - name: Are the private dependencies reachable?
-        id: creds
-        env:
-          TOKEN: ${{ secrets.REUNA_CI_TOKEN }}
-        run: |
-          if [ -n "$TOKEN" ]; then
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Build skipped::REUNA_CI_TOKEN is not set, so the private pins (mirage-crypto fork, digestif fork, web3-codec) cannot be fetched. The conformance job still runs, and needs nothing private. See .github/workflows/test.yml."
-          fi
-
-      - name: Let git reach the private remotes
-        if: steps.creds.outputs.ok == 'true'
-        env:
-          TOKEN: ${{ secrets.REUNA_CI_TOKEN }}
-        run: |
-          git config --global \
-            url."https://x-access-token:${TOKEN}@github.com/".insteadOf \
-            "https://github.com/"
-
       - uses: ocaml/setup-ocaml@v3
-        if: steps.creds.outputs.ok == 'true'
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
           opam-local-packages: "*.opam"
@@ -136,7 +93,6 @@ jobs:
       # passwordless sudo. This supplies only the outer adapter build and does
       # not add GMP to the core package closure.
       - name: Build the GMP prerequisite for TLS without host privileges
-        if: steps.creds.outputs.ok == 'true'
         env:
           GMP_VERSION: "6.3.0"
           GMP_SHA256: a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898
@@ -165,11 +121,7 @@ jobs:
       # than a missing pin. digestif is pinned for RIPEMD-160 and the 1.4
       # series.
       #
-      # These are private repositories. If this step fails to fetch, that is
-      # the G0 launch gate showing itself -- "no opam file points to a private
-      # repository" -- and not a workflow bug. See docs/release.md.
       - name: Pin the crypto forks
-        if: steps.creds.outputs.ok == 'true'
         run: |
           M=git+https://github.com/reuna-labs/mirage-crypto.git#v2.4.0-reuna1
           opam pin add -yn mirage-crypto.dev "$M"
@@ -181,35 +133,27 @@ jobs:
           opam pin add -yn digestif.dev \
             git+https://github.com/reuna-labs/digestif.git#v1.4.0-alpha1
 
-      # The lean codec packages are now on main; keeping the branch explicit
-      # makes this private staging dependency reproducible until it is tagged.
+      # Keep the alpha tag explicit until the codec packages reach opam.
       - name: Pin the sibling packages
-        if: steps.creds.outputs.ok == 'true'
         run: |
           B=git+https://github.com/reuna-labs/ocaml-web3-codec.git#v0.1.0-alpha1
           opam pin add -yn web3-codec-bech32.dev "$B"
           opam pin add -yn web3-codec-protobuf.dev "$B"
 
-      - if: steps.creds.outputs.ok == 'true'
-        run: opam install -y --assume-depexts --deps-only --with-test .
+      - run: opam install -y --assume-depexts --deps-only --with-test .
 
       # Formatting is a repository check rather than a package dependency, so
       # --deps-only does not install it. Keep this aligned with .ocamlformat.
-      - if: steps.creds.outputs.ok == 'true'
-        run: opam install -y ocamlformat.0.29.0
+      - run: opam install -y ocamlformat.0.29.0
 
-      - if: steps.creds.outputs.ok == 'true'
-        run: opam exec -- dune build @install
+      - run: opam exec -- dune build @install
 
-      - if: steps.creds.outputs.ok == 'true'
-        run: opam exec -- dune runtest
+      - run: opam exec -- dune runtest
 
       # The offline closure carries no I/O and no GMP, checked from the
       # declared dependencies and then proved by linking.
       - name: The offline closure stays offline
-        if: steps.creds.outputs.ok == 'true'
         run: opam exec -- ./test/no_io_guard.sh
 
       - name: Formatting
-        if: steps.creds.outputs.ok == 'true'
         run: opam exec -- dune build @fmt
