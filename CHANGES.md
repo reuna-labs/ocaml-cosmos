@@ -1,6 +1,12 @@
 # Changes
 
-## 0.1.0~alpha1 (unreleased)
+## 0.1.0~alpha2 (2026-08-30)
+
+- Declare the `cosmos-signer` dependency required by the public address and
+  guarded testnet executables in `cosmos-rpc-unix`, so the package installs
+  independently from an opam repository.
+
+## 0.1.0~alpha1 (2026-08-30)
 
 Repository scaffold and the L0 specification pin.
 

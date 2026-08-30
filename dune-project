@@ -2,7 +2,7 @@
 
 (name cosmos)
 
-(version 0.1.0~alpha1)
+(version 0.1.0~alpha2)
 
 (generate_opam_files true)
 
@@ -182,6 +182,7 @@
   (cosmos-rpc-flow (= :version))
   (cosmos-tx (= :version))
   (cosmos-crypto (= :version))
+  (cosmos-signer (= :version))
   (lwt (>= 5.6.0))
   (mirage-flow (>= 4.0.0))
   (mirage-flow-unix (>= 4.0.0))
