@@ -2,13 +2,13 @@
 
 ## Status
 
-**Scaffold, and unaudited alpha where it exists at all. Do not use this to
-control assets of value.**
+**Public, unaudited alpha. Do not use this to control assets of value.**
 
-Nothing here has been released, independently reviewed or fuzzed, and its
-dependency closure includes private repositories. The launch gates in
-`../vault/Reuna/Attic/OCaml web3 state of the art status.md` place this at L0 —
-specification pin — with L1 onwards not started.
+`v0.1.0-alpha2`, its dependency closure and guarded testnet evidence are public.
+The 141-test suite, no-I/O boundary and conformance oracles pass, but the planned
+fuzz targets have not been implemented and there has been no sustained fuzz
+campaign or independent review. The launch gates therefore place release and
+assurance at partial, not complete.
 
 ## Reporting
 

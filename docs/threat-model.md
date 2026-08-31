@@ -1,9 +1,8 @@
 # Threat model
 
-Status: **draft**. This is the shape of the argument, written at scaffold time
-so that L1–L4 are built against it rather than having it reverse-engineered at
-review time. It is not an assurance artefact and no independent review has
-happened.
+Status: **active alpha review scope**. L1–L4 were built against this model and
+the guarded testnet path now supplies L5 evidence. It is not an assurance
+artefact and no independent review has happened.
 
 ## What this library is for
 

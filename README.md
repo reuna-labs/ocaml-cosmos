@@ -6,11 +6,23 @@ construction with a byte-derived intent layer, and a typed client that reaches
 a node over CometBFT JSON-RPC or gRPC without changing implementation between a
 Unix socket and a Solo5 vsock.
 
-> **Scaffold. Unaudited alpha software, and most of it is not written yet.**
-> The protobuf layer is real; the rest is a package skeleton with the module
-> boundaries fixed. Do not use it to control assets of value. See `SECURITY.md`
-> and the G10 milestones in
+> **Public, unaudited alpha software.** `v0.1.0-alpha2` contains the complete
+> first signer/client slice, but it has not had sustained fuzzing or independent
+> review. Do not use it to control assets of value. See `SECURITY.md` and the
+> G10 milestones in
 > `../vault/Reuna/Attic/OCaml web3 state of the art status.md`.
+
+## Install
+
+```sh
+opam repository add reuna https://github.com/reuna-labs/opam-repository.git
+opam update
+opam install cosmos-rpc-unix.0.1.0~alpha2
+```
+
+This installs the hosted client and its pure transaction, signer, protobuf and
+flow packages from checksum-pinned public release archives. No development pins
+are required.
 
 ## Why a separate repository from `ocaml-cometbft`
 
@@ -35,7 +47,7 @@ which messages they carry, what denomination they price gas in, and which
 bech32 prefix they spell addresses with — so the chain is a *profile*, a record
 of data, and never a branch in the code.
 
-## What it will do
+## What it does
 
 - **Addresses.** 20 or 32 raw bytes plus a prefix; the bech32 spelling is a
   rendering. `cosmos1…` and `cosmosvaloper1…` are the same bytes and are not
@@ -55,7 +67,7 @@ of data, and never a branch in the code.
 - **Two transports, one set of types**, both functorised over `Mirage_flow.S`
   so either reaches a Solo5 vsock.
 
-## What it will not do
+## What it does not do
 
 Deliberately, and each is a decision rather than an omission:
 
