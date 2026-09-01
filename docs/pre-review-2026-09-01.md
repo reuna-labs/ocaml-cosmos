@@ -62,6 +62,8 @@ These are review prompts, not confirmed vulnerabilities:
 ## Evidence state at the time of writing
 
 The ordinary suite, format check, bounded fuzz targets, and no-I/O guard passed
-locally. The Linux AFL workflow was launched separately; its result must be
-recorded in `docs/fuzzing.md` only after the run and retained artifacts are
-verified. No independent reviewer has been engaged by this document.
+locally. The retained Linux AFL campaign then completed at commit
+`9ab9a0e6b45a316cd1b6126cdd651f6f2e04090e`: all six targets ran for one hour,
+executed 33,597,760 cases, and retained no crash or hang finding. Exact run,
+statistics, and artifact digests are recorded in `docs/fuzzing.md`. No
+independent reviewer has been engaged by this document.

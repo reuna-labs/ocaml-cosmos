@@ -2,7 +2,7 @@
 
 (name cosmos)
 
-(version 0.1.0~alpha2)
+(version 0.1.0~alpha3)
 
 (generate_opam_files true)
 

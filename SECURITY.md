@@ -4,11 +4,11 @@
 
 **Public, unaudited alpha. Do not use this to control assets of value.**
 
-`v0.1.0-alpha2`, its dependency closure and guarded testnet evidence are public.
+`v0.1.0-alpha3`, its dependency closure and guarded testnet evidence are public.
 The hermetic suite, no-I/O boundary, conformance oracles and six bounded
-Crowbar targets pass, but there has been no sustained fuzz campaign or
-independent review. The launch gates therefore place release and assurance at
-partial, not complete.
+Crowbar targets pass. A retained one-hour-per-target AFL campaign completed
+without a crash or hang, but there has been no independent review. The launch
+gates therefore place release and assurance at partial, not complete.
 
 ## Reporting
 

@@ -1,71 +1,53 @@
 # Release
 
-Status: **nothing has been released.** This file records the order and the
-gates, not a procedure that has been run.
+Status: **public alpha train; the next candidate remains unaudited.**
 
-## The blocker
+`v0.1.0-alpha2` and its complete dependency closure are installable without
+credentials from the public Reuna opam overlay. The private-dependency blocker
+that shaped the original release plan is closed: immutable source tags,
+archive checksums, and the exact first-release roots are recorded in the
+overlay's `release/first-release.lock`.
 
-`cosmos.opam.template` names six pinned dependencies that live in private
-`reuna-labs` repositories. Until that block is empty, a clean unauthenticated
-machine cannot install this package, which is the G0 launch gate in
-`vault/Reuna/Attic/OCaml web3 state of the art status.md`. Publishing anything
-before that is publishing something nobody can install.
+## Publishing order
 
-### What it looks like in practice
+Dependency order remains risk order:
 
-The runner has no git credential for github.com, so `opam pin` on any of the
-six private dependencies fails with
+1. `web3-codec-bech32`, `web3-codec-protobuf`.
+2. `cosmos-proto`, regenerated from the protocol pin and diffed.
+3. `cosmos-types`, `cosmos-crypto`.
+4. `cosmos-tx` and `cosmos-signer`, with both conformance oracles green.
+5. `cosmos-rpc`, then its flow, gRPC, and Unix transports.
+6. `cosmos`, the umbrella package.
 
-```
-fatal: could not read Username for 'https://github.com': No such device or address
-```
+For a new Cosmos release:
 
-CI therefore checks for a `REUNA_CI_TOKEN` repository secret before it does
-anything else, and skips the build when it is absent rather than spending
-thirty-five minutes building a compiler on the way to a failure it could have
-predicted.
+1. settle the source commit and run ordinary CI;
+2. run and inspect all six sustained-fuzz artifacts for that code baseline;
+3. create the immutable source tag and GitHub release;
+4. import every `cosmos*.opam` file with the overlay's
+   `tools/import-release.sh`;
+5. replace the Cosmos root row in `release/first-release.lock` with the new
+   tag, archive URL, and SHA-256/SHA-512 values;
+6. run `tools/check.sh`, publish the overlay commit, and require the complete
+   three-compiler install/consumer matrix to pass.
 
-The `conformance` job needs nothing private and runs either way — the pin
-check, protoc, the Go SDK and CosmJS. That is the payoff for keeping the
-conformance inputs outside the fork closure: the thing most likely to catch a
-protocol regression is also the thing that still works when the credential is
-missing.
+Never update a checksum at an existing tag. A changed archive or package set
+requires a new tag.
 
-Adding the token makes the build run. It does not close G0: a token is how
-*this* organisation reaches its own forks, and the gate is that an
-unauthenticated clean machine can install the package at all. Closing it means
-upstreaming `Mirage_crypto_ec.P256k1` and the digestif changes, or publishing
-the forks, or vendoring them with provenance — the same choice
-`ocaml-solana` faced and answered for the codec packages by vendoring a
-snapshot at `vendor/web3-codec`. That answer does not transfer here unchanged:
-Solana needs Ed25519, which released mirage-crypto-ec has, while this needs
-secp256k1, which it does not.
+## Assurance gates
 
-## Order
+The alpha line requires L0–L5 green and L6 in progress:
 
-Dependency order, which is also risk order:
+- public unauthenticated installation from checksum-pinned archives;
+- conformance fixtures reproduced by protoc, the Go SDK, and CosmJS;
+- `test/no_io_guard.sh` and the Solo5/flow link proofs clean;
+- guarded testnet construction, simulation, broadcast, and confirmation;
+- bounded fuzz targets kept green in ordinary CI;
+- a retained sustained AFL campaign on parsers and submission state;
+- independent review of signing bytes, intent/policy derivation, Amino
+  canonicalization, and sequence recovery.
 
-1. `web3-codec-bech32`, `web3-codec-protobuf` — from `../ocaml-web3-codec`.
-2. `cosmos-proto` — generated, and the easiest to verify: regenerate from the
-   pin and diff.
-3. `cosmos-types`, `cosmos-crypto` — the first packages that can be wrong in a
-   way that costs money.
-4. `cosmos-tx` — the signing boundary. Nothing here ships without the
-   conformance fixtures green against both oracles.
-5. `cosmos-rpc`, then the three transports.
-6. `cosmos` — the umbrella, last, because it pins the others.
-
-## Gates, per the launch document's L0–L6
-
-An alpha release requires L0–L5 green and L6 in progress. In particular:
-
-- both conformance oracles reproduce the committed fixtures in CI;
-- `test/no_io_guard.sh` clean, including the GMP rule;
-- a Solo5 guest that boots and signs;
-- a sustained clean fuzzing run on the parsers and both state machines;
-- `docs/threat-model.md` promoted from draft;
-- independent review of the signing boundary, the intent derivation and the
-  sequence handling.
-
-Until then every package carries the alpha warning in `README.md` and
-`SECURITY.md`, and the version remains an alpha.
+The maintainer pre-review and independent-review brief are in
+`docs/pre-review-2026-09-01.md` and `docs/security-review.md`. They do not close
+the independent-review gate. Every package remains labeled **public, unaudited
+alpha**, and must not control assets of value.

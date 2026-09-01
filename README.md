@@ -6,9 +6,10 @@ construction with a byte-derived intent layer, and a typed client that reaches
 a node over CometBFT JSON-RPC or gRPC without changing implementation between a
 Unix socket and a Solo5 vsock.
 
-> **Public, unaudited alpha software.** `v0.1.0-alpha2` contains the complete
-> first signer/client slice, but it has not had sustained fuzzing or independent
-> review. Do not use it to control assets of value. See `SECURITY.md` and the
+> **Public, unaudited alpha software.** `v0.1.0-alpha3` contains the complete
+> first signer/client slice and a retained six-target AFL campaign, but it has
+> not had independent review. Do not use it to control assets of value. See
+> `SECURITY.md` and the
 > G10 milestones in
 > `../vault/Reuna/Attic/OCaml web3 state of the art status.md`.
 
@@ -17,7 +18,7 @@ Unix socket and a Solo5 vsock.
 ```sh
 opam repository add reuna https://github.com/reuna-labs/opam-repository.git
 opam update
-opam install cosmos-rpc-unix.0.1.0~alpha2
+opam install cosmos-rpc-unix.0.1.0~alpha3
 ```
 
 This installs the hosted client and its pure transaction, signer, protobuf and

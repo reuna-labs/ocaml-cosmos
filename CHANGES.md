@@ -1,10 +1,12 @@
 # Changes
 
-## Unreleased
+## 0.1.0~alpha3 (2026-09-01)
 
 - Add six bounded Crowbar targets covering Bech32, protobuf transaction
   structures, SignDoc normalization, canonical Amino JSON, hostile JSON-RPC
   and adversarial submission events.
+- Retain a clean one-hour-per-target AFL campaign covering all six targets:
+  33,597,760 executions with no crash or hang findings.
 - Make completed submission outcomes absorbing so a late transport or decoder
   error cannot overwrite a delivered or rejected result.
 - Add a bounded independent-review brief and a clearly labeled maintainer
