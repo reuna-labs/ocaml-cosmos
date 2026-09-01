@@ -107,11 +107,26 @@ jobs:
           FUZZ_SECONDS: ${{ github.event.inputs.duration_seconds || '3600' }}
         run: tools/run-fuzz-campaign.sh "${{ matrix.target }}"
 
+      # AFL's canonical queue names contain colons. The artifact service rejects
+      # those as Windows-incompatible paths, so preserve the exact evidence in
+      # a tar archive before upload.
+      - name: Package corpus, crashes, and campaign statistics
+        if: always()
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          evidence="$RUNNER_TEMP/cosmos-fuzz/$TARGET"
+          if [ -d "$evidence" ]; then
+            tar --create --gzip \
+              --file "$RUNNER_TEMP/afl-$TARGET.tar.gz" \
+              --directory "$evidence" .
+          fi
+
       - name: Retain corpus, crashes, and campaign statistics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: afl-${{ matrix.target }}-${{ github.run_id }}
-          path: ${{ runner.temp }}/cosmos-fuzz
+          path: ${{ runner.temp }}/afl-${{ matrix.target }}.tar.gz
           if-no-files-found: warn
           retention-days: 30
