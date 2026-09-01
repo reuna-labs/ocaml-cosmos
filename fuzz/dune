@@ -1,0 +1,20 @@
+; Bounded under an ordinary compiler, AFL targets under an instrumented switch.
+; Keep both modes on the same sources so the campaign harness cannot bit-rot.
+
+(executables
+ (names
+  fuzz_bech32
+  fuzz_proto
+  fuzz_sign_doc
+  fuzz_amino
+  fuzz_json
+  fuzz_submission)
+ (libraries
+  cosmos-types
+  cosmos-crypto
+  cosmos-tx
+  cosmos-rpc
+  web3-codec-bech32
+  digestif
+  yojson
+  crowbar))

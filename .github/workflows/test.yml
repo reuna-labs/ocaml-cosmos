@@ -150,6 +150,16 @@ jobs:
 
       - run: opam exec -- dune runtest
 
+      # These are bounded Crowbar runs. Sustained AFL campaigns use a dedicated
+      # instrumented switch and retain their corpora; see docs/fuzzing.md.
+      - name: Fuzz targets
+        run: |
+          opam exec -- dune build fuzz/
+          for target in _build/default/fuzz/*.exe; do
+            echo "== $target"
+            "$target"
+          done
+
       # The offline closure carries no I/O and no GMP, checked from the
       # declared dependencies and then proved by linking.
       - name: The offline closure stays offline

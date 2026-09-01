@@ -1,5 +1,13 @@
 # Changes
 
+## Unreleased
+
+- Add six bounded Crowbar targets covering Bech32, protobuf transaction
+  structures, SignDoc normalization, canonical Amino JSON, hostile JSON-RPC
+  and adversarial submission events.
+- Make completed submission outcomes absorbing so a late transport or decoder
+  error cannot overwrite a delivered or rejected result.
+
 ## 0.1.0~alpha2 (2026-08-30)
 
 - Declare the `cosmos-signer` dependency required by the public address and

@@ -1,5 +1,6 @@
 
 _build/
+_build-afl/
 _opam/
 *.install
 conformance/cosmjs/node_modules/

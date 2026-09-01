@@ -1,0 +1,113 @@
+name: sustained fuzz
+
+on:
+  schedule:
+    - cron: "17 2 * * 0"
+  workflow_dispatch:
+    inputs:
+      duration_seconds:
+        description: Seconds to fuzz each target
+        required: true
+        default: "3600"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  afl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - fuzz_bech32
+          - fuzz_proto
+          - fuzz_sign_doc
+          - fuzz_amino
+          - fuzz_json
+          - fuzz_submission
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: ocaml-variants.5.5.0+options,ocaml-option-afl
+          opam-local-packages: "*.opam"
+          opam-disable-sandboxing: true
+
+      - name: Build the GMP prerequisite without host privileges
+        env:
+          GMP_VERSION: "6.3.0"
+          GMP_SHA256: a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898
+        run: |
+          archive="$RUNNER_TEMP/gmp-$GMP_VERSION.tar.xz"
+          source_dir="$(mktemp --directory "$RUNNER_TEMP/gmp-build.XXXXXX")"
+          gmp_prefix="$RUNNER_TEMP/ocaml-cosmos-gmp-afl"
+          curl --fail --location --retry 5 --retry-all-errors \
+            --connect-timeout 20 --output "$archive" \
+            "https://ftp.gnu.org/gnu/gmp/gmp-$GMP_VERSION.tar.xz"
+          echo "$GMP_SHA256  $archive" | sha256sum --check --strict
+          tar --extract --xz --file "$archive" --directory "$source_dir" --strip-components 1
+          cd "$source_dir"
+          ./configure --prefix="$gmp_prefix" --with-pic
+          make -j"$(nproc)"
+          make install
+          echo "CPATH=$gmp_prefix/include" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$gmp_prefix/lib" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$gmp_prefix/lib" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=$gmp_prefix/lib/pkgconfig" >> "$GITHUB_ENV"
+
+      - name: Pin the crypto forks
+        run: |
+          M=git+https://github.com/reuna-labs/mirage-crypto.git#v2.4.0-reuna1
+          opam pin add -yn mirage-crypto.dev "$M"
+          opam pin add -yn mirage-crypto-rng.dev "$M"
+          opam pin add -yn mirage-crypto-ec.dev "$M"
+          opam pin add -yn mirage-crypto-pk.dev "$M"
+          opam pin add -yn digestif.dev \
+            git+https://github.com/reuna-labs/digestif.git#v1.4.0-alpha1
+
+      - name: Pin the sibling packages
+        run: |
+          B=git+https://github.com/reuna-labs/ocaml-web3-codec.git#v0.1.0-alpha1
+          opam pin add -yn web3-codec-bech32.dev "$B"
+          opam pin add -yn web3-codec-protobuf.dev "$B"
+
+      - run: opam install -y --assume-depexts --deps-only --with-test .
+
+      - name: Build hash-pinned AFL++ without host privileges
+        env:
+          AFL_VERSION: "5.02c"
+          AFL_SHA256: 118415843e5d289d63bd6d8f2252c18212978f15ac9e86acbbc75766cd45acde
+        run: |
+          archive="$RUNNER_TEMP/afl-$AFL_VERSION.tar.gz"
+          source_dir="$(mktemp --directory "$RUNNER_TEMP/afl-build.XXXXXX")"
+          prefix="$RUNNER_TEMP/afl"
+          curl --fail --location --retry 5 --retry-all-errors \
+            --connect-timeout 20 --output "$archive" \
+            "https://github.com/AFLplusplus/AFLplusplus/archive/refs/tags/v$AFL_VERSION.tar.gz"
+          echo "$AFL_SHA256  $archive" | sha256sum --check --strict
+          tar --extract --gzip --file "$archive" --directory "$source_dir" --strip-components 1
+          make -C "$source_dir" -j"$(nproc)" source-only \
+            PREFIX="$prefix" CC=clang CXX=clang++
+          make -C "$source_dir" install \
+            PREFIX="$prefix" CC=clang CXX=clang++
+          echo "$prefix/bin" >> "$GITHUB_PATH"
+
+      - name: Run ${{ matrix.target }}
+        env:
+          FUZZ_BUILD_DIR: _build-afl
+          FUZZ_OUTPUT_ROOT: ${{ runner.temp }}/cosmos-fuzz
+          FUZZ_SECONDS: ${{ github.event.inputs.duration_seconds || '3600' }}
+        run: tools/run-fuzz-campaign.sh "${{ matrix.target }}"
+
+      - name: Retain corpus, crashes, and campaign statistics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: afl-${{ matrix.target }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/cosmos-fuzz
+          if-no-files-found: warn
+          retention-days: 30

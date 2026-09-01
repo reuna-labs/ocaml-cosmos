@@ -5,10 +5,10 @@
 **Public, unaudited alpha. Do not use this to control assets of value.**
 
 `v0.1.0-alpha2`, its dependency closure and guarded testnet evidence are public.
-The 141-test suite, no-I/O boundary and conformance oracles pass, but the planned
-fuzz targets have not been implemented and there has been no sustained fuzz
-campaign or independent review. The launch gates therefore place release and
-assurance at partial, not complete.
+The hermetic suite, no-I/O boundary, conformance oracles and six bounded
+Crowbar targets pass, but there has been no sustained fuzz campaign or
+independent review. The launch gates therefore place release and assurance at
+partial, not complete.
 
 ## Reporting
 

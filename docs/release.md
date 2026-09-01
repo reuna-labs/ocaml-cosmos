@@ -68,4 +68,4 @@ An alpha release requires L0–L5 green and L6 in progress. In particular:
   sequence handling.
 
 Until then every package carries the alpha warning in `README.md` and
-`SECURITY.md`, and the version stays `0.1.0~alpha1`.
+`SECURITY.md`, and the version remains an alpha.

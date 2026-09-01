@@ -184,21 +184,23 @@ let on_tx t result =
   | _ -> t
 
 let on_error t e =
-  if not (Error.is_retryable e) then give_up t (Error.to_string e)
-  else
-    match t.state with
-    | Checking_node | Fetching_account -> t (* ask again *)
-    | Awaiting_signature _ -> t
-    | Broadcasting _ ->
-        (* The dangerous one. A transport failure during broadcast leaves it
+  match t.state with
+  | Done _ -> t
+  | _ when not (Error.is_retryable e) -> give_up t (Error.to_string e)
+  | _ -> (
+      match t.state with
+      | Checking_node | Fetching_account -> t (* ask again *)
+      | Awaiting_signature _ -> t
+      | Broadcasting _ ->
+          (* The dangerous one. A transport failure during broadcast leaves it
          unknown whether the node received the transaction, so re-broadcasting
          the same bytes could double-submit -- except that it cannot, because
          the same sequence can only be used once. Going back for the account
          state is what distinguishes "it never arrived" from "it arrived and
          the connection dropped": if it arrived, the sequence has moved. *)
-        rebuild t "the connection dropped during broadcast"
-    | Polling { hash; polls } ->
-        if polls >= t.config.max_polls then
-          give_up t "polling failed repeatedly"
-        else { t with state = Polling { hash; polls = polls + 1 } }
-    | Done _ -> t
+          rebuild t "the connection dropped during broadcast"
+      | Polling { hash; polls } ->
+          if polls >= t.config.max_polls then
+            give_up t "polling failed repeatedly"
+          else { t with state = Polling { hash; polls = polls + 1 } }
+      | Done _ -> t)

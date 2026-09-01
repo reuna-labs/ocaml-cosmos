@@ -265,6 +265,19 @@ let a_non_retryable_error_ends_it () =
   | Some (Sub.Gave_up _) -> ()
   | _ -> Alcotest.fail "a malformed response is not worth retrying"
 
+let completion_is_absorbing () =
+  let m = Sub.start (config ()) in
+  let m = Sub.on_status m (status ()) in
+  let m = Sub.on_account m (account ()) in
+  let m = Sub.on_signed m "tx" in
+  let m = Sub.on_broadcast m (broadcast ()) in
+  let m = Sub.on_tx m (delivered ()) in
+  let before = Sub.finished m in
+  let m = Sub.on_error m (Rpc.Error.Malformed "late event") in
+  Alcotest.(check bool)
+    "a late error cannot replace a final result" true
+    (Sub.finished m = before)
+
 let () =
   Alcotest.run "cosmos-submission"
     [
@@ -301,5 +314,7 @@ let () =
             polling_is_bounded_and_says_what_it_does_not_know;
           Alcotest.test_case "a non-retryable error ends it" `Quick
             a_non_retryable_error_ends_it;
+          Alcotest.test_case "completion is absorbing" `Quick
+            completion_is_absorbing;
         ] );
     ]
