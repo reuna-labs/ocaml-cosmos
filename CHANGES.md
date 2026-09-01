@@ -7,6 +7,8 @@
   and adversarial submission events.
 - Make completed submission outcomes absorbing so a late transport or decoder
   error cannot overwrite a delivered or rejected result.
+- Add a bounded independent-review brief and a clearly labeled maintainer
+  pre-review record.
 
 ## 0.1.0~alpha2 (2026-08-30)
 

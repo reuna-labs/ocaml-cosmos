@@ -98,6 +98,10 @@ jobs:
 
       - name: Run ${{ matrix.target }}
         env:
+          # Hosted runners pipe core dumps to an external collector and do not
+          # permit changing kernel.core_pattern. AFL can therefore classify a
+          # late crash as a timeout; retain both directories as evidence.
+          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: "1"
           FUZZ_BUILD_DIR: _build-afl
           FUZZ_OUTPUT_ROOT: ${{ runner.temp }}/cosmos-fuzz
           FUZZ_SECONDS: ${{ github.event.inputs.duration_seconds || '3600' }}

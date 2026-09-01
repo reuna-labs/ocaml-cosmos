@@ -45,6 +45,13 @@ statistics for 30 days. A manual run may select a different duration. Campaign
 evidence is the workflow run plus its six artifacts; merely having the workflow
 configured does not satisfy the sustained-campaign gate.
 
+GitHub-hosted runners pipe core dumps to an external collector and do not let
+the job change `kernel.core_pattern`. The workflow uses AFL's documented hosted
+runner override, which means a crash delayed by that collector may appear under
+`hangs` rather than `crashes`; both directories are retained and must be
+inspected. Local Linux campaigns should leave the override unset and configure
+direct core handling instead.
+
 For a local campaign, create a separate switch containing
 `ocaml-variants.5.5.0+options` and `ocaml-option-afl`, install the package's test
 dependencies in it, install AFL++, and run:

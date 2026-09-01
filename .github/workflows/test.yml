@@ -144,7 +144,19 @@ jobs:
 
       # Formatting is a repository check rather than a package dependency, so
       # --deps-only does not install it. Keep this aligned with .ocamlformat.
-      - run: opam install -y ocamlformat.0.29.0
+      # GitLab archive generation changed in place in September 2026, making
+      # the opam-repository checksums for these two transitive sources stale.
+      # Fetch the exact commits through git instead of bypassing checksums or
+      # dropping the formatting gate.
+      - name: Install the formatter from immutable dependency commits
+        run: |
+          opam pin add -yn fix.20250919 \
+            git+https://gitlab.inria.fr/fpottier/fix.git#f80b9fb39569f3d2795a05fee7f0c79d0b3afce0
+          M=git+https://gitlab.inria.fr/fpottier/menhir.git#0c6d021629bafa2fa32302d01d9594d2a026ec75
+          for package in menhir menhirCST menhirGLR menhirLib menhirSdk; do
+            opam pin add -yn "$package".20260209 "$M"
+          done
+          opam install -y ocamlformat.0.29.0
 
       - run: opam exec -- dune build @install
 
