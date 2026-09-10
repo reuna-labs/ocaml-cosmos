@@ -130,7 +130,7 @@ In the `reuna-5.5` switch the build dependencies are already pinned; see
 ## Design docs
 
 - `../vault/Reuna/SDD/` — component design documents
-- `../vault/Reuna/Platryx HLD.md` — how the components fit together
+- `../vault/Reuna/Reuna HLD.md` — how the components fit together
 
 ## Helper toolkits — `~/gilbahat`
 
