@@ -1,3 +1,8 @@
+(* Validation only: fixed entropy for a published test key. Deployments must
+   initialize Mirage RNG from their trusted platform entropy source. *)
+let () = Mirage_crypto_rng.set_default_generator
+    (Mirage_crypto_rng.create ~seed:(String.make 48 '\042') (module Mirage_crypto_rng.Fortuna))
+
 (* The signer transcript.
 
    There is no external oracle for this: no other implementation decides what a

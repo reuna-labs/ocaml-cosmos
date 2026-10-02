@@ -2,21 +2,8 @@
 opam-version: "2.0"
 version: "0.1.0~alpha3"
 synopsis: "Secp256k1 signing and address derivation for Cosmos SDK chains"
-description: """
-Signs the 32-byte SHA-256 digest of a serialized SignDoc and produces the
-64-byte r||s the SDK expects -- no recovery byte, because the public key
-travels in SignerInfo.
-
-Signatures are normalised to low-S. The SDK rejects high-S as malleable and
-mirage-crypto-ec does not normalise, so this is a correctness requirement
-rather than a preference.
-
-Curve operations use mirage-crypto-ec's fiat-crypto P256k1 backend and are
-constant time. Address derivation is RIPEMD-160 over SHA-256 of the
-compressed public key, both from digestif. Ed25519 is verify-only: it is a
-validator key type, not an account signing path this library offers.
-
-No RNG: nonces are RFC 6979 deterministic."""
+description:
+  "Native libsecp256k1 signing with low-S output. Nonces are RFC6979 deterministic; public derivation and signing require an initialized Mirage RNG for independent context blinding. No system crypto or bignum backend."
 maintainer: ["Gil Bahat <bahat.gil@gmail.com>"]
 authors: ["Gil Bahat <bahat.gil@gmail.com>"]
 license: "ISC"
@@ -27,7 +14,7 @@ depends: [
   "dune" {>= "3.6" & >= "3.6"}
   "cosmos-types" {= version}
   "digestif" {>= "1.2.0"}
-  "mirage-crypto-ec" {>= "2.1.0"}
+  "mirage-crypto-secp256k1"
   "alcotest" {with-test}
   "qcheck-core" {with-test}
   "qcheck-alcotest" {with-test}
@@ -48,3 +35,13 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/reuna-labs/ocaml-cosmos.git"
+# Development pins for the coordinated native crypto source.
+# Pins select versions; optional packages are installed only when required.
+pin-depends: [
+  [ "mirage-crypto.2.4.0" "git+https://github.com/reuna-labs/mirage-crypto.git#edeae749daa6f8eafb73446e68e654d00794e898" ]
+  [ "mirage-crypto-rng.2.4.0" "git+https://github.com/reuna-labs/mirage-crypto.git#edeae749daa6f8eafb73446e68e654d00794e898" ]
+  [ "mirage-crypto-secp256k1.2.4.0" "git+https://github.com/reuna-labs/mirage-crypto.git#edeae749daa6f8eafb73446e68e654d00794e898" ]
+  [ "mirage-crypto-ec.2.4.0" "git+https://github.com/reuna-labs/mirage-crypto.git#edeae749daa6f8eafb73446e68e654d00794e898" ]
+  [ "mirage-crypto-pk.2.4.0" "git+https://github.com/reuna-labs/mirage-crypto.git#edeae749daa6f8eafb73446e68e654d00794e898" ]
+  [ "digestif.1.4.0" "git+https://github.com/reuna-labs/digestif.git#770f9c355bd5fd60ebf63027b66a51920906519f" ]
+]

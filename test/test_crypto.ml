@@ -1,3 +1,8 @@
+(* Fixed entropy is for reproducible tests only. Applications must supply a
+   properly seeded Mirage RNG for native signing-context blinding. *)
+let () = Mirage_crypto_rng.set_default_generator
+    (Mirage_crypto_rng.create ~seed:(String.make 48 '\042') (module Mirage_crypto_rng.Fortuna))
+
 (* secp256k1 keys, addresses and signatures.
 
    The vectors come from a pure-Python secp256k1 written for the purpose --
@@ -183,7 +188,7 @@ let every_signature_is_low_s () =
   done
 
 let signing_is_deterministic () =
-  (* RFC 6979: no randomness anywhere, so the same inputs give the same bytes.
+  (* RFC 6979: context blinding varies, but the same inputs give the same signature bytes.
      This is what makes a signature comparable against another
      implementation's, which the conformance fixtures depend on. *)
   let v = List.nth key_vectors 3 in

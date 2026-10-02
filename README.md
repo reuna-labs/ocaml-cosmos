@@ -82,8 +82,21 @@ Deliberately, and each is a decision rather than an omission:
 - **Relaying IBC.** This can tell you a transfer was delivered on the sending
   chain. It cannot tell you it arrived.
 - **`SIGN_MODE_TEXTUAL`.** Withdrawn upstream in cosmos-sdk v0.55.0.
-- **Reading a clock, or drawing randomness.** Neither happens anywhere in
-  `lib/`. Timeouts are inputs; nonces are deterministic.
+- **Reading a clock.** Timeouts are inputs. ECDSA nonces are deterministic;
+  the native signer uses Mirage RNG for context blinding.
+
+## Signer RNG initialization
+
+Initialize Mirage RNG from the deployment's trusted entropy source before
+secp256k1 public-key derivation or signing. The native libsecp256k1 backend
+uses fresh randomness to blind each secret-key context. RFC 6979 signature
+bytes remain deterministic; context blinding does not change them. Missing
+or unseeded generators fail closed through Mirage RNG exceptions.
+
+Hosted entry points may initialize `Mirage_crypto_rng_unix`; Mirage/Solo5
+applications must supply their platform RNG integration. The crypto libraries
+depend on `mirage-crypto-rng`, without requiring its Unix adapter. Fixed test
+seeds are only for reproducible tests and must not be used in deployments.
 
 ## Layout
 
@@ -110,15 +123,15 @@ docs/               the specification pin, the switch, the unikernel state,
 ## Package boundaries
 
 `cosmos-types`, `cosmos-crypto`, `cosmos-proto`, `cosmos-tx` and `cosmos-rpc`
-are offline: no Unix, no Lwt, no clock, no RNG, no transport — and no `zarith`,
+are offline: no Unix, no Lwt, no clock, no transport — and no `zarith`,
 and therefore no GMP. `cosmos-rpc-flow` and `cosmos-rpc-grpc` own a socket and
 may assume neither a host operating system nor a TCP stack. `cosmos-rpc-unix`
 is the deliberate exception. `test/no_io_guard.sh` checks all of that from the
 declared dependencies rather than by grepping sources.
 
 The GMP-free property is worth a sentence because it is unusual: `ocaml-tron`
-cannot make the same claim, since Base58 and public-key recovery both need a
-bignum. Cosmos needs neither.
+still uses bignums for Base58 and EVM ABI values. Native secp256k1 recovery
+no longer requires a bignum dependency. Cosmos needs none of these.
 
 ## Building
 

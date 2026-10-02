@@ -15,7 +15,8 @@ other.
 ## Invariants
 
 Signed-data libraries are deterministic and free of Unix, Lwt, environment,
-clock, RNG and transport dependencies. `test/no_io_guard.sh` enforces this by
+clock and transport dependencies. Native signer-context blinding requires
+an initialized Mirage RNG; signature bytes remain deterministic. `test/no_io_guard.sh` enforces this by
 inspecting declared dependencies, not by grepping sources.
 
 **The bytes that were signed are the bytes that go out.** `SignDoc` binds
@@ -37,12 +38,14 @@ that cannot explain one has no business approving it.
 a transaction's validity. A signer that could fetch the current time could be
 walked into widening its own window. The current time is an input.
 
-**Nothing here draws randomness.** ECDSA nonces are RFC 6979 deterministic, so
-no generator is needed and `mirage-crypto-rng` initialisation stays off a
-unikernel's critical path.
+**Initialize Mirage RNG before secret-key operations.** ECDSA nonces remain
+RFC 6979 deterministic. Native libsecp256k1 contexts use fresh randomness for
+blinding during signing and public-key derivation. This requirement was
+explicitly approved for the backend migration; use deployment entropy, never
+the fixed seeds used in tests.
 
-**Signatures are low-S.** The SDK rejects high-S as malleable and
-`mirage-crypto-ec` does not normalise, so this is a correctness requirement.
+**Signatures are low-S.** Native libsecp256k1 signing normalizes S and the
+SDK rejects high-S inputs as malleable. This is a correctness requirement.
 A signature that is right by every other measure and high-S is refused by the
 node, which looks like a signing bug one layer up from where it is.
 
@@ -50,7 +53,7 @@ node, which looks like a signing bug one layer up from where it is.
 neither. Cosmos never recovers a public key from a signature — the key travels
 in `SignerInfo` — so `mirage-crypto-blockchain`'s reference bignum backend is
 not required; address derivation is RIPEMD-160 over SHA-256 from `digestif`,
-the curve work is `mirage-crypto-ec`'s fiat-crypto P256k1, bech32 is integer
+the curve work is native libsecp256k1, bech32 is integer
 arithmetic and the protobuf runtime is `base64` + `ptime`. Losing this is
 silent — the code still builds, the duniverse just stops locking — so
 `test/no_io_guard.sh` checks it alongside the I/O rule.

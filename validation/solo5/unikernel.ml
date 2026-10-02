@@ -1,3 +1,8 @@
+(* Validation only: fixed entropy for a published test key. Deployments must
+   initialize Mirage RNG from their trusted platform entropy source. *)
+let () = Mirage_crypto_rng.set_default_generator
+    (Mirage_crypto_rng.create ~seed:(String.make 48 '\042') (module Mirage_crypto_rng.Fortuna))
+
 (* Links the offline closure. What it does at run time matters less than what
    it does at link time, but it touches each package so that none is dropped as
    unreferenced. *)

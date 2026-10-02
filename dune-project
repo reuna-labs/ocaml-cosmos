@@ -68,14 +68,14 @@
 (package
  (name cosmos-crypto)
  (synopsis "Secp256k1 signing and address derivation for Cosmos SDK chains")
- (description
-  "Signs the 32-byte SHA-256 digest of a serialized SignDoc and produces the\n64-byte r||s the SDK expects -- no recovery byte, because the public key\ntravels in SignerInfo.\n\nSignatures are normalised to low-S. The SDK rejects high-S as malleable and\nmirage-crypto-ec does not normalise, so this is a correctness requirement\nrather than a preference.\n\nCurve operations use mirage-crypto-ec's fiat-crypto P256k1 backend and are\nconstant time. Address derivation is RIPEMD-160 over SHA-256 of the\ncompressed public key, both from digestif. Ed25519 is verify-only: it is a\nvalidator key type, not an account signing path this library offers.\n\nNo RNG: nonces are RFC 6979 deterministic.")
+ (description "Native libsecp256k1 signing with low-S output. Nonces are RFC6979 deterministic; public derivation and signing require an initialized Mirage RNG for independent context blinding. No system crypto or bignum backend.")
  (depends
   (ocaml (>= 4.14))
   (dune (>= 3.6))
   (cosmos-types (= :version))
   (digestif (>= 1.2.0))
-  (mirage-crypto-ec (>= 2.1.0))
+  mirage-crypto-secp256k1
+  (mirage-crypto-ec :with-test)
   (alcotest :with-test)
   (qcheck-core :with-test)
   (qcheck-alcotest :with-test)))
@@ -176,6 +176,7 @@
  (description
   "Cardano's and Tron's arrangement: this is Cosmos_rpc_flow.Make applied to a\nUnix file descriptor and nothing else, so the Unix path and the unikernel\npath are the same implementation with a different flow underneath.\n\nThe guarded live-network executable ships in this package: it is the only\nthing here that signs with a real key and touches a network, and it needs a\nUnix transport to do either.")
  (depends
+  mirage-crypto-rng
   (ocaml (>= 4.14))
   (dune (>= 3.6))
   (cosmos-rpc (= :version))

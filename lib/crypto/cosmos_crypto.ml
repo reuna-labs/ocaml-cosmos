@@ -1,9 +1,4 @@
-(* Fiat-crypto, constant time. This is the only backend a private key reaches,
-   and there is deliberately no second one: Tron needs a reference
-   implementation for public-key recovery, and recovery is exactly what Cosmos
-   does not do. See dune. *)
-module Dsa = Mirage_crypto_ec.P256k1.Dsa
-module Prim = Mirage_crypto_ec.P256k1.Primitive
+module Dsa = Mirage_crypto_secp256k1
 
 type private_key = Dsa.priv
 type public_key = Dsa.pub
@@ -35,7 +30,7 @@ let private_key_of_bytes b =
     | Error _ -> Error "crypto: private key is not in [1, n)"
     | exception _ -> Error "crypto: private key is not in [1, n)"
 
-let public_key_of_private = Dsa.pub_of_priv
+let public_key_of_private key = Dsa.pub_of_priv key
 
 let public_key_of_bytes b =
   (* pub_of_octets returns a result and also raises: a short buffer announcing
@@ -60,12 +55,6 @@ let address_bytes k =
 
 (* Signing *)
 
-let normalise { r; s } =
-  (* scalar_negate is (n - s) mod n, constant time, and needs no bignum -- the
-     alternative is arbitrary-precision arithmetic on a value derived from the
-     nonce, which is where a timing leak gets reintroduced by hand. *)
-  if is_over_half_order s then { r; s = Prim.scalar_negate s } else { r; s }
-
 let sign_digest ~key digest =
   if String.length digest <> digest_length then
     Error
@@ -73,9 +62,9 @@ let sign_digest ~key digest =
          (String.length digest))
   else
     match Dsa.sign ~key digest with
-    | r, s -> Ok (normalise { r; s })
-    | exception Mirage_crypto_ec.Message_too_long ->
-        Error "crypto: digest is longer than the group order"
+    | signature ->
+        let bytes = Dsa.signature_to_octets signature in
+        Ok { r = String.sub bytes 0 32; s = String.sub bytes 32 32 }
     | exception Invalid_argument m -> Error ("crypto: " ^ m)
 
 let is_low_s { s; _ } = not (is_over_half_order s)
@@ -84,7 +73,10 @@ let verify_digest ~key sg digest =
   (* The SDK's verifier rejects a high-S signature before it checks the
      mathematics (secp256k1_nocgo.go:43-51), so this refuses it too. Verifying
      against the curve alone would accept signatures a node will not. *)
-  is_low_s sg && Dsa.verify ~key (sg.r, sg.s) digest
+  is_low_s sg &&
+  match Dsa.signature_of_octets (sg.r ^ sg.s) with
+  | Error _ -> false
+  | Ok signature -> Dsa.verify ~key signature digest
 
 let signature_to_bytes { r; s } = r ^ s
 

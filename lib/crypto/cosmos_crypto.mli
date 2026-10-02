@@ -1,44 +1,11 @@
-(** secp256k1 signing and address derivation for Cosmos SDK chains.
+(** Native libsecp256k1 signing for Cosmos. Signatures cover an already hashed
+    32-byte digest and encode r || s with low S. Verification enforces the
+    Cosmos SDK low-S rule. Address derivation is RIPEMD160(SHA256(compressed pk)).
 
-    {2 One hash, and the signature is not recoverable}
-
-    A Cosmos signature covers [SHA-256] of the serialized [SignDoc] and goes on
-    the wire as 64 bytes, [r] then [s]
-    ([crypto/keys/secp256k1/secp256k1_nocgo.go:13-21] at the pinned revision).
-    There is no recovery byte and no recovery function here: the public key
-    travels in [SignerInfo], so nothing ever needs to derive it from a
-    signature. That is what keeps the reference bignum backend — and with it
-    zarith and GMP — out of this closure.
-
-    Nothing here hashes a message. {!sign_digest} takes 32 bytes already
-    computed, because the caller is the only party that knows what went into
-    them.
-
-    {2 Low-S is a requirement, not a nicety}
-
-    The SDK rejects a signature whose [s] is above [n/2] as malleable — its
-    verifier calls [signatureFromBytes], which returns an error for
-    [s.IsOverHalfOrder()] before it checks anything else
-    ([secp256k1_nocgo.go:43-51]). [mirage-crypto-ec] does not normalise, so a
-    signature that is correct by every other measure is refused by the node, and
-    the failure looks like a signing bug one layer above where it is.
-
-    {!sign_digest} normalises. {!is_low_s} is exposed so that a decoder can ask
-    what it was handed rather than assume.
-
-    {2 Randomness}
-
-    None is drawn. Nonces are RFC 6979 deterministic, which keeps
-    [mirage-crypto-rng] initialisation off a unikernel's critical path and makes
-    a signature reproducible — and therefore comparable against another
-    implementation's, which is what the conformance fixtures rely on.
-
-    The trade is real and worth naming: [mirage-crypto-ec] documents power and
-    timing attacks against the RFC 6979 computation of [k] and advises supplying
-    [k] explicitly from a good source. In an enclave with no entropy service on
-    the critical path there is no such source, and a signature that cannot be
-    reproduced cannot be checked against the SDK. Determinism wins here; if that
-    changes, it changes with a threat model behind it. *)
+    Signing uses RFC6979 deterministic nonces. Public derivation and signing
+    require an initialized Mirage RNG for independent context blinding;
+    randomness does not change signatures. Applications provide entropy, and
+    this library introduces no Unix or arbitrary-precision arithmetic dependency. *)
 
 type private_key
 type public_key

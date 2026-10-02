@@ -3,21 +3,18 @@
 ; looking for dune files inside it.
 
 (tests
+ (modules (:standard \ test_crypto test_tx test_amino test_transcript))
  (names
   test_cosmos
   test_address
   test_amount
   test_amount_props
   test_coin
-  test_crypto
   test_profile
-  test_tx
-  test_amino
   test_policy
   test_rpc
   test_submission
   test_http
-  test_transcript
   test_resilience
   test_endpoint)
  (deps
@@ -25,6 +22,7 @@
   (glob_files ../conformance/fixtures/amino/*.json)
   (glob_files ../conformance/fixtures/rpc/*.json))
  (libraries
+  mirage-crypto-rng
   cosmos
   cosmos-types
   cosmos-crypto
@@ -42,3 +40,13 @@
   alcotest
   qcheck-core
   qcheck-alcotest))
+
+; Signing vectors and wire compatibility do not need the hosted RPC stack.
+(tests
+ (names test_crypto test_tx test_amino test_transcript)
+ (modules test_crypto test_tx test_amino test_transcript)
+ (deps
+  (glob_files ../conformance/fixtures/protoc/*.hex)
+  (glob_files ../conformance/fixtures/amino/*.json))
+ (libraries cosmos cosmos-types cosmos-crypto cosmos-tx cosmos-signer mirage-crypto-rng
+  mirage-crypto-ec digestif alcotest yojson fmt))

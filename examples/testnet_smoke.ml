@@ -1,3 +1,6 @@
+(* Hosted entry point: seed context blinding from operating-system entropy. *)
+let () = Mirage_crypto_rng_unix.use_default ()
+
 (* The guarded live signing smoke.
    
    This is the only program in the repository that signs with a real key and
