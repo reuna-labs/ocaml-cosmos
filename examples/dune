@@ -8,7 +8,8 @@
  (modules address_of_key query testnet_smoke)
  (public_names cosmos-address-of-key cosmos-query cosmos-testnet-smoke)
  (package cosmos-rpc-unix)
- (libraries mirage-crypto-rng.unix
+ (libraries
+  mirage-crypto-rng.unix
   cosmos-rpc
   cosmos-rpc-unix
   cosmos-types

@@ -1,11 +1,13 @@
 (** Native libsecp256k1 signing for Cosmos. Signatures cover an already hashed
     32-byte digest and encode r || s with low S. Verification enforces the
-    Cosmos SDK low-S rule. Address derivation is RIPEMD160(SHA256(compressed pk)).
+    Cosmos SDK low-S rule. Address derivation is RIPEMD160(SHA256(compressed
+    pk)).
 
     Signing uses RFC6979 deterministic nonces. Public derivation and signing
     require an initialized Mirage RNG for independent context blinding;
     randomness does not change signatures. Applications provide entropy, and
-    this library introduces no Unix or arbitrary-precision arithmetic dependency. *)
+    this library introduces no Unix or arbitrary-precision arithmetic
+    dependency. *)
 
 type private_key
 type public_key

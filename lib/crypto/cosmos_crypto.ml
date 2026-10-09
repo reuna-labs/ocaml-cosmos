@@ -73,7 +73,8 @@ let verify_digest ~key sg digest =
   (* The SDK's verifier rejects a high-S signature before it checks the
      mathematics (secp256k1_nocgo.go:43-51), so this refuses it too. Verifying
      against the curve alone would accept signatures a node will not. *)
-  is_low_s sg &&
+  is_low_s sg
+  &&
   match Dsa.signature_of_octets (sg.r ^ sg.s) with
   | Error _ -> false
   | Ok signature -> Dsa.verify ~key signature digest

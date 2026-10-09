@@ -14,7 +14,8 @@
 
 (executable
  (name unikernel)
- (libraries mirage-crypto-rng
+ (libraries
+  mirage-crypto-rng
   cosmos
   cosmos-types
   cosmos-crypto
