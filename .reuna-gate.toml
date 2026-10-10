@@ -15,3 +15,12 @@ reason = "reuna-5.5 lacks mirage-crypto-secp256k1, so dune build @runtest cannot
 
 [extra]
 quick = ["opam exec -- dune build @fmt"]
+
+[go.govulncheck-ignore]
+# Waiting on upstream, by decision (2026-10-10). The simd conformance oracle
+# reaches golang.org/x/crypto/openpgp only through cosmos-sdk's crypto/armor.go,
+# which still imports it in v0.55.0, the latest release. openpgp itself is
+# frozen and will not be fixed, so this clears when the SDK drops it; the gate
+# reports this entry as stale the moment that happens. The oracle generates
+# test fixtures and ships in nothing.
+"GO-2026-5932" = "x/crypto/openpgp via cosmos-sdk v0.55.0 crypto/armor.go; waiting for the SDK to drop it; test-fixture oracle only"
