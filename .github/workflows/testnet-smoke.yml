@@ -26,11 +26,16 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Is this configured?
         id: configured
@@ -48,7 +53,7 @@ jobs:
             echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: ocaml/setup-ocaml@v3
+      - uses: ocaml/setup-ocaml@93303b622b2522e4411e295f9e77411a24912ac7 # v3.9.0
         if: steps.configured.outputs.ok == 'true'
         with:
           ocaml-compiler: "5.2.1"
@@ -76,10 +81,12 @@ jobs:
           ./configure --prefix="$gmp_prefix" --with-pic
           make -j"$(nproc)"
           make install
-          echo "CPATH=$gmp_prefix/include" >> "$GITHUB_ENV"
-          echo "LIBRARY_PATH=$gmp_prefix/lib" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$gmp_prefix/lib" >> "$GITHUB_ENV"
-          echo "PKG_CONFIG_PATH=$gmp_prefix/lib/pkgconfig" >> "$GITHUB_ENV"
+          {
+            echo "CPATH=$gmp_prefix/include"
+            echo "LIBRARY_PATH=$gmp_prefix/lib"
+            echo "LD_LIBRARY_PATH=$gmp_prefix/lib"
+            echo "PKG_CONFIG_PATH=$gmp_prefix/lib/pkgconfig"
+          } >> "$GITHUB_ENV"
 
       - name: Pin the forks and siblings
         if: steps.configured.outputs.ok == 'true'
@@ -117,7 +124,7 @@ jobs:
       # archived run is a record of what the client actually did.
       - name: Keep the transcript
         if: steps.configured.outputs.ok == 'true' && always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: testnet-transcript
           path: testnet-transcript.txt
