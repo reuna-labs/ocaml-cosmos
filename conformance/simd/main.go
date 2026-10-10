@@ -25,25 +25,25 @@ import (
 	"encoding/json"
 	"os"
 
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	signingapi "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	// The SDK vendored x/tx into itself at v0.55. Importing cosmossdk.io/x/tx
 	// as well registers the same proto file twice and panics at init.
 	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
 	"google.golang.org/protobuf/proto"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"cosmossdk.io/math"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	transfertypes "github.com/cosmos/ibc-go/v11/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v11/modules/core/02-client/types"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // The three addresses in conformance/protoc/*.txtpb, derived from private
@@ -90,7 +90,7 @@ func msgSend() sdk.Msg {
 
 func msgMultiSend() sdk.Msg {
 	return &banktypes.MsgMultiSend{
-		Inputs:  []banktypes.Input{{Address: addr1, Coins: coins("uatom", "3000000")}},
+		Inputs: []banktypes.Input{{Address: addr1, Coins: coins("uatom", "3000000")}},
 		Outputs: []banktypes.Output{
 			{Address: addr2, Coins: coins("uatom", "1000000")},
 			{Address: addr3, Coins: coins("uatom", "2000000")},
@@ -100,12 +100,12 @@ func msgMultiSend() sdk.Msg {
 
 func msgTransfer() sdk.Msg {
 	return &transfertypes.MsgTransfer{
-		SourcePort:    "transfer",
-		SourceChannel: "channel-141",
-		Token:         sdk.NewCoin("uatom", amount("500000")),
-		Sender:        addr1,
-		Receiver:      "osmo1w508d6qejxtdg4y5r3zarvary0c5xw7kdjmmmt",
-		TimeoutHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 20000000},
+		SourcePort:       "transfer",
+		SourceChannel:    "channel-141",
+		Token:            sdk.NewCoin("uatom", amount("500000")),
+		Sender:           addr1,
+		Receiver:         "osmo1w508d6qejxtdg4y5r3zarvary0c5xw7kdjmmmt",
+		TimeoutHeight:    clienttypes.Height{RevisionNumber: 1, RevisionHeight: 20000000},
 		TimeoutTimestamp: 1774000000000000000,
 	}
 }
